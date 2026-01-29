@@ -1,0 +1,6 @@
+PyQt6
+nidaqmx
+pyqtgraph
+numpy
+pyserial
+# Add other dependencies here as needed

@@ -1,0 +1,81 @@
+from PyQt6.QtCore import QObject, pyqtSignal
+import numpy as np
+import time
+
+class ExperimentWorker(QObject):
+    progress_updated = pyqtSignal(int, str)
+    finished = pyqtSignal()
+    results_ready = pyqtSignal(np.ndarray)
+    error = pyqtSignal(str)
+
+    def __init__(self, tfp_handler, ni_handler, delays, nb_cycles, spectrum_len=1024):
+        super().__init__()
+        self.tfp_handler = tfp_handler
+        self.ni_handler = ni_handler
+        self.delays = delays
+        self.nb_cycles = nb_cycles
+        self.spectrum_len = spectrum_len
+        self._running = False
+        self.results = None
+
+    def run(self):
+        self._running = True
+        N = len(self.delays)
+        self.results = np.zeros((N, self.spectrum_len + N))
+
+        # Start the observation generator
+        spectra_gen = self.tfp_handler.observe()
+        
+        try:
+            for i, delay_ms in enumerate(self.delays):
+                if not self._running:
+                    break
+                
+                # Update NI pulse delay (convert ms to seconds)
+                try:
+                    self.ni_handler.stop_delayed_pulse()
+                except:
+                    pass
+                self.ni_handler.start_delayed_pulse(delay_ms / 1000.0)
+                
+                # Capture and sum nb_cycles spectra
+                sum_spectra = np.zeros(self.spectrum_len)
+                for _ in range(self.nb_cycles):
+                    if not self._running:
+                        break
+                    try:
+                        spectrum = next(spectra_gen)
+                        # If spectrum is not complete, get the next one
+                        if len(spectrum) != self.spectrum_len:
+                            spectrum = next(spectra_gen)
+                        
+                        sum_spectra += np.array(spectrum)
+                    except StopIteration:
+                        self.error.emit("Observation generator stopped prematurely.")
+                        return
+                
+                if not self._running:
+                    break
+
+                # Store summed spectra in results with the 'i' shift
+                self.results[i, N - i : self.spectrum_len + N - i] = sum_spectra
+                
+                # Emit progress
+                progress = int(((i + 1) / N) * 100)
+                self.progress_updated.emit(progress, f"Delay {i+1}/{N} ({delay_ms:.2f} ms)")
+                
+            if self._running:
+                self.results_ready.emit(self.results)
+                
+        except Exception as e:
+            self.error.emit(str(e))
+        finally:
+            self._running = False
+            self.tfp_handler.stop_observation()
+            self.ni_handler.stop_delayed_pulse()
+            self.finished.emit()
+
+    def stop(self):
+        self._running = False
+        self.tfp_handler.stop_observation()
+        self.ni_handler.stop_delayed_pulse()
