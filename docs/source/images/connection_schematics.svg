@@ -1,0 +1,321 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="195.4736mm"
+   height="99.113525mm"
+   viewBox="0 0 195.4736 99.113525"
+   version="1.1"
+   id="svg1"
+   inkscape:version="1.3.2 (091e20e, 2023-11-25)"
+   sodipodi:docname="connection_schematics.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="mm"
+     inkscape:zoom="0.98846573"
+     inkscape:cx="250.38804"
+     inkscape:cy="258.48139"
+     inkscape:window-width="1512"
+     inkscape:window-height="834"
+     inkscape:window-x="0"
+     inkscape:window-y="38"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs1" />
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(-15.026402,-5.1394784)">
+    <rect
+       style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke-width:1;stroke-linecap:round;stroke-linejoin:round"
+       id="rect1"
+       width="50"
+       height="40"
+       x="15.026402"
+       y="14.16775"
+       ry="3.867461" />
+    <rect
+       style="fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke-width:0.887412;stroke-linecap:round;stroke-linejoin:round"
+       id="rect1-9"
+       width="45"
+       height="35"
+       x="17.526402"
+       y="16.667751"
+       ry="3.3840284" />
+    <path
+       style="fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1;stroke-linecap:round;stroke-linejoin:round;stroke-opacity:1"
+       d="m 25.482079,55.973617 h 29.088647 l 9.03511,9.035108 H 16.446968 l 9.035111,-9.035108"
+       id="path2" />
+    <rect
+       style="fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1;stroke-linecap:round;stroke-linejoin:round;stroke-opacity:1;stroke-dasharray:none"
+       id="rect2"
+       width="118.79076"
+       height="33.626556"
+       x="88.519089"
+       y="5.8260541"
+       ry="0" />
+    <text
+       xml:space="preserve"
+       style="font-size:7.05556px;font-family:Calibri;-inkscape-font-specification:Calibri;text-align:center;letter-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1;stroke-linecap:round;stroke-linejoin:round;stroke-opacity:1"
+       x="39.814526"
+       y="36.069447"
+       id="text2"><tspan
+         sodipodi:role="line"
+         id="tspan2"
+         style="fill:#000000;fill-opacity:1;stroke:none;stroke-width:1"
+         x="39.814526"
+         y="36.069447">Computer</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:7.05556px;font-family:Calibri;-inkscape-font-specification:Calibri;text-align:center;letter-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1;stroke-linecap:round;stroke-linejoin:round;stroke-opacity:1"
+       x="142.06236"
+       y="13.158689"
+       id="text2-0"><tspan
+         sodipodi:role="line"
+         id="tspan2-4"
+         style="fill:#000000;fill-opacity:1;stroke:none;stroke-width:1"
+         x="142.06236"
+         y="13.158689">NI card (cDAQ 9178 + 9401)</tspan></text>
+    <rect
+       style="fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1;stroke-linecap:round;stroke-linejoin:round;stroke-opacity:1"
+       id="rect3"
+       width="19.244535"
+       height="9.8555222"
+       x="88.33252"
+       y="25.845131"
+       ry="0" />
+    <text
+       xml:space="preserve"
+       style="font-size:7.05556px;font-family:Calibri;-inkscape-font-specification:Calibri;text-align:center;letter-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1;stroke-linecap:round;stroke-linejoin:round;stroke-opacity:1"
+       x="97.787697"
+       y="33.330875"
+       id="text3"><tspan
+         sodipodi:role="line"
+         id="tspan3"
+         style="fill:#000000;fill-opacity:1;stroke:none;stroke-width:1"
+         x="97.787697"
+         y="33.330875">USB</tspan></text>
+    <g
+       id="g3"
+       transform="translate(21.032848,-24.157139)">
+      <circle
+         style="fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1;stroke-linecap:round;stroke-linejoin:round;stroke-opacity:1"
+         id="path3"
+         cx="102.07942"
+         cy="54.930031"
+         r="4" />
+      <circle
+         style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:1;stroke-linecap:round;stroke-linejoin:round;stroke-opacity:1"
+         id="path3-1"
+         cx="102.07942"
+         cy="54.930031"
+         r="1" />
+    </g>
+    <g
+       id="g3-1"
+       transform="translate(21.032848,6.248843)">
+      <circle
+         style="fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1;stroke-linecap:round;stroke-linejoin:round;stroke-opacity:1"
+         id="path3-5"
+         cx="102.07942"
+         cy="54.930031"
+         r="4" />
+      <circle
+         style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:1;stroke-linecap:round;stroke-linejoin:round;stroke-opacity:1"
+         id="path3-1-5"
+         cx="102.07942"
+         cy="54.930031"
+         r="1" />
+    </g>
+    <g
+       id="g3-2"
+       transform="translate(40.56806,-24.157139)">
+      <circle
+         style="fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1;stroke-linecap:round;stroke-linejoin:round;stroke-opacity:1"
+         id="path3-2"
+         cx="102.07942"
+         cy="54.930031"
+         r="4" />
+      <circle
+         style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:1;stroke-linecap:round;stroke-linejoin:round;stroke-opacity:1"
+         id="path3-1-6"
+         cx="102.07942"
+         cy="54.930031"
+         r="1" />
+    </g>
+    <g
+       id="g3-2-4"
+       transform="translate(49.734398,6.248843)">
+      <circle
+         style="fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1;stroke-linecap:round;stroke-linejoin:round;stroke-opacity:1"
+         id="path3-2-6"
+         cx="102.07942"
+         cy="54.930031"
+         r="4" />
+      <circle
+         style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:1;stroke-linecap:round;stroke-linejoin:round;stroke-opacity:1"
+         id="path3-1-6-4"
+         cx="102.07942"
+         cy="54.930031"
+         r="1" />
+    </g>
+    <g
+       id="g3-2-4-0"
+       transform="translate(59.194973,42.553787)">
+      <circle
+         style="fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1;stroke-linecap:round;stroke-linejoin:round;stroke-opacity:1"
+         id="path3-2-6-9"
+         cx="102.07942"
+         cy="54.930031"
+         r="4" />
+      <circle
+         style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:1;stroke-linecap:round;stroke-linejoin:round;stroke-opacity:1"
+         id="path3-1-6-4-3"
+         cx="102.07942"
+         cy="54.930031"
+         r="1" />
+    </g>
+    <path
+       style="fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1;stroke-linecap:round;stroke-linejoin:round;stroke-opacity:1"
+       d="m 65.026402,24.773777 c 13.036393,0 7.724132,5.999115 23.306118,5.999115"
+       id="path4"
+       sodipodi:nodetypes="cc" />
+    <rect
+       style="fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1;stroke-linecap:round;stroke-linejoin:round;stroke-opacity:1"
+       id="rect3-0"
+       width="19.244535"
+       height="9.8555222"
+       x="72.073235"
+       y="57.915901"
+       ry="0" />
+    <text
+       xml:space="preserve"
+       style="font-size:7.05556px;font-family:Calibri;-inkscape-font-specification:Calibri;text-align:center;letter-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1;stroke-linecap:round;stroke-linejoin:round;stroke-opacity:1"
+       x="81.528412"
+       y="65.401642"
+       id="text3-2"><tspan
+         sodipodi:role="line"
+         id="tspan3-4"
+         style="fill:#000000;fill-opacity:1;stroke:none;stroke-width:1"
+         x="81.528412"
+         y="65.401642">USB</tspan></text>
+    <path
+       style="fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1;stroke-linecap:round;stroke-linejoin:round;stroke-opacity:1"
+       d="m 65.026405,34.167751 c 13.036393,0 -8.535155,28.675911 7.046831,28.675911"
+       id="path4-8"
+       sodipodi:nodetypes="cc" />
+    <rect
+       style="fill:none;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1;stroke-linecap:round;stroke-linejoin:round;stroke-opacity:1"
+       id="rect4"
+       width="60.188873"
+       height="33.152"
+       x="72.181541"
+       y="51.667751" />
+    <text
+       xml:space="preserve"
+       style="font-size:7.05556px;font-family:Calibri;-inkscape-font-specification:Calibri;text-align:center;letter-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1;stroke-linecap:round;stroke-linejoin:round;stroke-opacity:1"
+       x="82.542992"
+       y="80.337585"
+       id="text4"><tspan
+         sodipodi:role="line"
+         id="tspan4"
+         style="fill:#000000;fill-opacity:1;stroke:none;stroke-width:1"
+         x="82.542992"
+         y="80.337585">TFP</tspan></text>
+    <rect
+       style="fill:none;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1"
+       id="rect4-9"
+       width="71.726013"
+       height="51.960583"
+       x="138.27399"
+       y="51.792423" />
+    <text
+       xml:space="preserve"
+       style="font-size:7.05556px;font-family:Calibri;-inkscape-font-specification:Calibri;text-align:center;letter-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1;stroke-linecap:round;stroke-linejoin:round;stroke-opacity:1"
+       x="180.72157"
+       y="59.207577"
+       id="text4-5"><tspan
+         sodipodi:role="line"
+         id="tspan4-6"
+         style="fill:#000000;fill-opacity:1;stroke:none;stroke-width:1"
+         x="180.72157"
+         y="59.207577">NPI Iso-stim</tspan></text>
+    <path
+       style="fill:none;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1;stroke-linecap:round;stroke-linejoin:round;stroke-opacity:1"
+       d="m 123.11222,60.178873 c -8.32927,-9.511122 7.38647,-22.01951 0,-29.405982 m 28.7016,30.405983 c -8.32927,-9.511122 -1.77987,-24.01951 -9.16634,-31.405982"
+       id="path5"
+       sodipodi:nodetypes="cccc" />
+    <text
+       xml:space="preserve"
+       style="font-size:4.93889px;font-family:Calibri;-inkscape-font-specification:Calibri;text-align:center;letter-spacing:0px;text-anchor:middle;fill:none;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1;stroke-linecap:round;stroke-linejoin:round;stroke-opacity:1"
+       x="123.08339"
+       y="24.433537"
+       id="text5"><tspan
+         sodipodi:role="line"
+         id="tspan5"
+         style="font-style:italic;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4.93889px;font-family:Calibri;-inkscape-font-specification:'Calibri Italic';fill:#000000;fill-opacity:1;stroke:none;stroke-width:1"
+         x="123.08339"
+         y="24.433537">PFI0</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:4.93889px;font-family:Calibri;-inkscape-font-specification:Calibri;text-align:center;letter-spacing:0px;text-anchor:middle;fill:none;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1;stroke-linecap:round;stroke-linejoin:round;stroke-opacity:1"
+       x="142.61867"
+       y="24.433537"
+       id="text5-3"><tspan
+         sodipodi:role="line"
+         id="tspan5-0"
+         style="font-style:italic;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4.93889px;font-family:Calibri;-inkscape-font-specification:'Calibri Italic';fill:#000000;fill-opacity:1;stroke:none;stroke-width:1"
+         x="142.61867"
+         y="24.433537">PFI4</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:4.93889px;font-family:Calibri;-inkscape-font-specification:Calibri;text-align:center;letter-spacing:0px;text-anchor:middle;fill:none;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1;stroke-linecap:round;stroke-linejoin:round;stroke-opacity:1"
+       x="151.62946"
+       y="71.147636"
+       id="text5-3-9"><tspan
+         sodipodi:role="line"
+         id="tspan5-0-7"
+         style="font-style:italic;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4.93889px;font-family:Calibri;-inkscape-font-specification:'Calibri Italic';fill:#000000;fill-opacity:1;stroke:none;stroke-width:1"
+         x="151.62946"
+         y="71.147636">Gate IN</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:4.93889px;font-family:Calibri;-inkscape-font-specification:Calibri;text-align:center;letter-spacing:0px;text-anchor:middle;fill:none;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1;stroke-linecap:round;stroke-linejoin:round;stroke-opacity:1"
+       x="161.16118"
+       y="90.192101"
+       id="text5-3-9-2"><tspan
+         sodipodi:role="line"
+         id="tspan5-0-7-1"
+         style="font-style:italic;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4.93889px;font-family:Calibri;-inkscape-font-specification:'Calibri Italic';fill:#000000;fill-opacity:1;stroke:none;stroke-width:1"
+         x="161.16118"
+         y="90.192101">Isolated Output</tspan></text>
+    <g
+       id="g1"
+       transform="translate(-3.4344741,54.635884)">
+      <text
+         xml:space="preserve"
+         style="font-size:4.93889px;font-family:Calibri;-inkscape-font-specification:Calibri;text-align:center;letter-spacing:0px;text-anchor:middle;fill:none;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1;stroke-linecap:round;stroke-linejoin:round;stroke-opacity:1"
+         x="126.28871"
+         y="16.559984"
+         id="text5-5"><tspan
+           sodipodi:role="line"
+           id="tspan5-2"
+           style="font-style:italic;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4.93889px;font-family:Calibri;-inkscape-font-specification:'Calibri Italic';fill:#000000;fill-opacity:1;stroke:none;stroke-width:1"
+           x="126.28871"
+           y="16.559984">Clock</tspan></text>
+    </g>
+  </g>
+</svg>
