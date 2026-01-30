@@ -5,13 +5,16 @@ Tr-TFP is a software suite designed to interface a computer with a Tandem Fabry-
 ## Features
 
 - **TFP Interface**: Configuration and control of scanning parameters.
-- **NI Integration**: Precise timing and photon counting using NI-DAQmx.
+- **NI Integration**: Precise timing of pulse triggers with respect to scanning of TFP with NI modules.
 - **Real-time Visualization**: Live feedback of acquired Brillouin spectra.
 - **Time-Resolved Measurements**: Support for experiment protocols with timing delays.
 
 ## Installation
 
 ### Prerequisites
+
+> [!IMPORTANT]  
+> The NI-DAQmx drivers only work on Windows and Linux. For macOS, the drivers are not available, so the NI card cannot be used.
 
 - Python 3.8+
 - [NI-DAQmx drivers](https://www.ni.com/en-us/support/downloads/drivers/download.ni-daqmx.html) (required for hardware communication)
@@ -62,5 +65,7 @@ The generated documentation will be located in `docs/build/html/index.html`.
 - `local_tests/`: Helper scripts and test data.
 
 ## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 &copy; 2026 Pierre Bouvet
