@@ -386,11 +386,13 @@ class TFP_TRWindow(QMainWindow):
             self.add_channels_btn.setChecked(False)
             self.remove_channels_btn.setStyleSheet("background-color: #7a2d2d; font-weight: bold;")
             self.add_channels_btn.setStyleSheet("")
+            self.hist_plot.setCursor(Qt.CursorShape.CrossCursor)
         else:
             self.interaction_mode = None
             self.remove_channels_btn.setStyleSheet("")
             if self.remove_channels_btn.isEnabled():
                 self.remove_channels_btn.setStyleSheet("background-color: #3d3d3d; color: #e1e1e1;")
+            self.hist_plot.setCursor(Qt.CursorShape.CrossCursor)
         
         self.update_region_interactivity()
 
@@ -719,44 +721,16 @@ class TFP_TRWindow(QMainWindow):
 
     def estimate_duration(self):
         """Estimates the duration of the experiment and updates the remaining time label."""
+
         if not hasattr(self, 'time_remaining_label'):
             return
 
-        if len(self.channel_regions) == 0:
-            self.time_remaining_label.setText("00:00:00")
-            return
-            
-        elif len(self.channel_regions) == 1:
-            try:
-                if self.nb_samples == 0:
-                    self.time_remaining_label.setText("00:00:00")
-                    return
-
-                chan = self.scanned_channels[0]
-                low, high = chan
-                freq = self.tfp_handler.freq_axis_func(self.nb_samples)
-
-                idx0 = np.argmin(np.abs(freq - low))
-                idx1 = np.argmin(np.abs(freq - high))
-                
-                nb_channels_scanned = abs(idx1 - idx0)
-                # Each experiment consists in a virtual number of channels equal to the number of channel scanned plus the delay expressed in number of channels (one channel is scanned in 500 µs)
-                N = nb_channels_scanned + (self.time_around_pulse_ms * 2)
-                
-                total_seconds = N * self.nb_cycles * self.tfp_handler.SCAN_DURATION
-                self.total_duration_estimate = total_seconds
-                
-                # Format as HH:MM:SS
-                self.time_remaining_label.setText(self.format_time(total_seconds))
-            except Exception as e:
-                print(f"Error estimating duration: {e}")
-                self.time_remaining_label.setText("00:00:00")
-                self.total_duration_estimate = 0
-        else:
-            # We don't want to spam QMessageBox during interactivity
-            self.time_remaining_label.setText("--:--:--")
-            self.total_duration_estimate = 0
-            print("Multi-window duration estimation not yet implemented.")
+        total_seconds = self.tfp_handler.estimate_duration(self.scanned_channels, self.nb_samples, self.time_around_pulse_ms, self.nb_cycles)
+        self.total_duration_estimate = total_seconds
+        print("Total seconds: ", total_seconds)
+        
+        # Format as HH:MM:SS
+        self.time_remaining_label.setText(self.format_time(total_seconds))
 
     def format_time(self, total_seconds):
         """Formats seconds into HH:MM:SS string."""

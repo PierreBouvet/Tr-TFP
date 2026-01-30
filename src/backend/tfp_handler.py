@@ -121,3 +121,36 @@ class TFPHandler:
     def stop_observation(self):
         """Signals the observe generator to stop."""
         self._is_observing = False
+
+    def estimate_duration(self, channels, nb_samples, time_around_pulse_ms, nb_cycles):
+        """Estimates the duration of the experiment and updates the remaining time label."""
+        if len(channels) == 0:
+            return 0
+            
+        elif len(channels) == 1:
+            try:
+                if nb_samples == 0:
+                    return 0
+
+                chan = channels[0]
+                low, high = chan
+                freq = self.freq_axis_func(nb_samples)
+
+                idx0 = np.argmin(np.abs(freq - low))
+                idx1 = np.argmin(np.abs(freq - high))
+                
+                nb_channels_scanned = abs(idx1 - idx0)
+                # Each experiment consists in a virtual number of channels equal to the number of channel scanned plus the delay expressed in number of channels (one channel is scanned in 500 µs)
+                N = nb_channels_scanned + (time_around_pulse_ms * 2)
+                
+                total_seconds = N * nb_cycles * self.SCAN_DURATION
+                
+                # Format as HH:MM:SS
+                return total_seconds
+            except Exception as e:
+                print(f"Error estimating duration: {e}")
+                return 0
+        else:
+            # We don't want to spam QMessageBox during interactivity
+            print("Multi-window duration estimation not yet implemented.")
+            return 0
