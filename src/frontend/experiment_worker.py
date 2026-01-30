@@ -27,20 +27,20 @@ class ExperimentWorker(QObject):
         spectra_gen = self.tfp_handler.observe()
         
         try:
-            for i, delay_ms in enumerate(self.delays):
-                if not self._running:
-                    break
+            for _ in range(self.nb_cycles):
+                for i, delay_ms in enumerate(self.delays):
+                    if not self._running:
+                        break
+                    
+                    # Update NI pulse delay (convert ms to seconds)
+                    try:
+                        self.ni_handler.stop_delayed_pulse()
+                    except:
+                        pass
+                    self.ni_handler.start_delayed_pulse(delay_ms / 1000.0)
+                    
+                    # Capture and sum nb_cycles spectra
                 
-                # Update NI pulse delay (convert ms to seconds)
-                try:
-                    self.ni_handler.stop_delayed_pulse()
-                except:
-                    pass
-                self.ni_handler.start_delayed_pulse(delay_ms / 1000.0)
-                
-                # Capture and sum nb_cycles spectra
-                sum_spectra = np.zeros(self.spectrum_len)
-                for _ in range(self.nb_cycles):
                     if not self._running:
                         break
                     try:
@@ -49,7 +49,9 @@ class ExperimentWorker(QObject):
                         if len(spectrum) != self.spectrum_len:
                             spectrum = next(spectra_gen)
                         
-                        sum_spectra += np.array(spectrum)
+                        # Store summed spectra in results with the 'i' shift
+                        self.results[i, N - i : self.spectrum_len + N - i] += np.array(spectrum)
+
                     except StopIteration:
                         self.error.emit("Observation generator stopped prematurely.")
                         return
@@ -57,8 +59,7 @@ class ExperimentWorker(QObject):
                 if not self._running:
                     break
 
-                # Store summed spectra in results with the 'i' shift
-                self.results[i, N - i : self.spectrum_len + N - i] = sum_spectra
+                
                 
                 # Emit progress
                 progress = int(((i + 1) / N) * 100)
