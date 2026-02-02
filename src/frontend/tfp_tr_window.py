@@ -852,6 +852,10 @@ class TFP_TRWindow(QMainWindow):
     def on_experiment_results_ready(self, results):
         """Handle results from finished experiment."""
         self.results = results
+
+        self.delay_array = np.zeros(self.results.shape)
+        for i in range(self.results.shape[0]):
+            self.delay_array[i, :] = np.array(self.results.shape[1])*0.5-self.delays[i]
         print("Measurement results received.")
         self.save_results()
 
@@ -872,12 +876,14 @@ class TFP_TRWindow(QMainWindow):
                 if not file_path.endswith('.npy'):
                     file_path += '.npy'
                 np.save(file_path, self.results)
+                np.save(file_path.replace('.npy', '_delays.npy'), self.delay_array)
             except Exception as e:
                 QMessageBox.critical(self, "Error", f"Failed to save results: {e}")
-        
-        print('\n\n', self.scanned_channels[0], '\n\n')
 
-        plt.imshow(self.results)
+        freq = self.tfp_handler.freq_axis_func(self.nb_samples) * 1e-9
+        channels = np.tile(freq[np.newaxis, :], (self.delay_array.shape[0], 1))
+        plt.pcolormesh(self.delay_array, channels, self.results)
+        plt.colorbar()
         plt.show()
 
     def on_experiment_error(self, message):
@@ -890,7 +896,6 @@ class TFP_TRWindow(QMainWindow):
              # Only reset if we finished normally or aborted
              self.abort_measure()
        
-
     def pause_measure(self):
         """Toggles between realign and measure."""
         if self.realign_btn.text() == "Realign":

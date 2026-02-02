@@ -17,20 +17,24 @@ class ExperimentWorker(QObject):
         self.spectrum_len = spectrum_len
         self._running = False
         self.results = None
+        self.delay_array = None
 
     def run(self):
         self._running = True
         N = len(self.delays)
-        self.results = np.zeros((N, self.spectrum_len + N))
+        self.results = np.zeros((N, self.spectrum_len))
+        self.delay_array = np.zeros((N, self.spectrum_len))
 
         # Start the observation generator
         spectra_gen = self.tfp_handler.observe()
         
         try:
-            for _ in range(self.nb_cycles):
+            for nbc in range(self.nb_cycles):
                 for i, delay_ms in enumerate(self.delays):
                     if not self._running:
                         break
+
+                    self.delay_array[i, :] = np.array(self.spectrum_len)*0.5-delay_ms
                     
                     # Update NI pulse delay (convert ms to seconds)
                     try:
@@ -50,20 +54,18 @@ class ExperimentWorker(QObject):
                             spectrum = next(spectra_gen)
                         
                         # Store summed spectra in results with the 'i' shift
-                        self.results[i, N - i : self.spectrum_len + N - i] += np.array(spectrum)
+                        self.results[i, :] += np.array(spectrum)
 
                     except StopIteration:
                         self.error.emit("Observation generator stopped prematurely.")
                         return
+                    
+                    # Emit progress
+                    progress = int(((i + nbc*N) / (N*self.nb_cycles)) * 100)
+                    self.progress_updated.emit(progress, f"Cycle {nbc+1}/{self.nb_cycles} | Delay {i+1}/{N} ({delay_ms:.2f} ms)")
                 
                 if not self._running:
                     break
-
-                
-                
-                # Emit progress
-                progress = int(((i + 1) / N) * 100)
-                self.progress_updated.emit(progress, f"Delay {i+1}/{N} ({delay_ms:.2f} ms)")
                 
             if self._running:
                 self.results_ready.emit(self.results)
