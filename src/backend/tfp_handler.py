@@ -93,7 +93,7 @@ class TFPHandler:
                 nu = np.linspace(-10, 10, 512)
                 self.current_scan = lorentzian(nu, 1, -5, 1) + lorentzian(nu, 1, 5, 1) + np.random.rand(512) * 0.1
                 yield self.current_scan
-                time.sleep(0.2)
+                time.sleep(0.01)
                 continue
             
             else:

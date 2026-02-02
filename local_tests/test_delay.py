@@ -19,8 +19,15 @@ delays_array = np.zeros((len(delays), len(freq)))
 
 for i in range(len(delays)):
     print(delays[i])
-    delays_array[i, :] = np.arange(len(freq))*0.5-delays[i]*10
+    delays_array[i, :] = np.arange(len(freq))*0.5-delays[i]
 
+channels = np.tile(freq[np.newaxis, :], (delays_array.shape[0], 1))
 
-plt.imshow(delays_array, cmap='turbo')
+x0 = lambda delta: 5 + np.sin(delta*2*np.pi/100)
+sigma = lambda delta: 1 + 0.5*np.sin(delta*2*np.pi/100)
+lorentzian = lambda x, A, x0, sigma: A * (sigma**2 / ((x - x0)**2 + sigma**2))
+
+scan = lorentzian(freq, 1, x0(delays_array), sigma(delays_array)) + lorentzian(freq, 1, -x0(delays_array), sigma(delays_array))
+
+plt.pcolormesh(delays_array, channels, scan, cmap='turbo')
 plt.show()

@@ -860,29 +860,51 @@ class TFP_TRWindow(QMainWindow):
         self.save_results()
 
     def save_results(self):
-        """Prompts the user to save the experiment results."""
+        """Prompts the user to save the experiment results in HDF5_BLS format."""
         if self.results is None:
             return
 
-        file_path, _ = QFileDialog.getSaveFileName(
-            self,
-            "Save Experiment Results",
-            "",
-            "NumPy Files (*.npy)"
-        )
+        try:
+            from frontend.hdf5_save_dialog import HDF5SaveDialog
+            from HDF5_BLS import Wrapper
+        except ImportError as e:
+            QMessageBox.critical(self, "Import Error", f"Failed to load HDF5_BLS or saving dialog: {e}")
+            return
 
-        if file_path:
-            try:
-                if not file_path.endswith('.npy'):
-                    file_path += '.npy'
-                np.save(file_path, self.results)
-                np.save(file_path.replace('.npy', '_delays.npy'), self.delay_array)
-            except Exception as e:
-                QMessageBox.critical(self, "Error", f"Failed to save results: {e}")
+        dialog = HDF5SaveDialog(self)
+        if dialog.exec():
+            selection = dialog.get_selection()
+            file_path = selection["file_path"]
+            target_group = selection["selected_group"]
+
+            if file_path:
+                try:
+                    wrp = Wrapper(file_path)
+                    
+                    # Prepare datasets
+                    freq = self.tfp_handler.freq_axis_func(self.nb_samples)
+                    abscissa = self.delay_array # This seems to be the time delay for each point
+                    psd = self.results
+                    
+                    # Store datasets in the chosen group
+                    wrp.add_frequency(freq, target_group, name="Frequency")
+                    wrp.add_abscissa(abscissa, target_group, name="Abscissa")
+                    wrp.add_PSD(psd, target_group, name="PSD")
+                    
+                    # Add attributes
+                    wrp.add_attributes({"SPECTROMETER.Type": "TFP"}, parent_group=target_group)
+                    
+                    wrp.close()
+                    print(f"Results saved to {file_path} in group {target_group}")
+                except Exception as e:
+                    QMessageBox.critical(self, "Error", f"Failed to save results: {e}")
 
         freq = self.tfp_handler.freq_axis_func(self.nb_samples) * 1e-9
+
         channels = np.tile(freq[np.newaxis, :], (self.delay_array.shape[0], 1))
+
         plt.pcolormesh(self.delay_array, channels, self.results)
+        
         plt.colorbar()
         plt.show()
 
