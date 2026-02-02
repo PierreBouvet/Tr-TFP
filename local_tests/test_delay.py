@@ -1,9 +1,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-time_around_pulse_ms = 50
+time_around_pulse_ms = 100
 
-chan = (-8, -4)
+chan = (-8, 8)
 low, high = chan
 freq = np.linspace(-10, 10, 1024)
 
@@ -23,8 +23,17 @@ for i in range(len(delays)):
 
 channels = np.tile(freq[np.newaxis, :], (delays_array.shape[0], 1))
 
-x0 = lambda delta: 5 + np.sin(delta*2*np.pi/100)
-sigma = lambda delta: 1 + 0.5*np.sin(delta*2*np.pi/100)
+
+
+x0 = lambda delta: 5*np.ones(delta.shape) + np.clip(np.sign(delta), 0, 1) * 0.5 * np.sin(delta*2*np.pi/100) * np.exp(-delta/30)
+
+# t = np.linspace(-1e3, 1e3, 1024)
+# plt.figure()
+# plt.plot(t, x0(t))
+# plt.show()
+
+
+sigma = lambda delta: 1 + 0.5*np.sin(delta*2*np.pi/100)/(delta)
 lorentzian = lambda x, A, x0, sigma: A * (sigma**2 / ((x - x0)**2 + sigma**2))
 
 scan = lorentzian(freq, 1, x0(delays_array), sigma(delays_array)) + lorentzian(freq, 1, -x0(delays_array), sigma(delays_array))

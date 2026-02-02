@@ -238,21 +238,25 @@ class TFP_TRWindow(QMainWindow):
         self.heatmap_plot.setLabel('left', 'Delay')
         self.heatmap_plot.setLabel('bottom', 'Channels')
         
-        self.image_item = pg.ImageItem()
+        self.image_item = pg.PColorMeshItem()
         self.heatmap_plot.addItem(self.image_item)
         
         # Dummy data for visualization
-        data = np.zeros((10, 10))
-        self.image_item.setImage(data)
+        # With PColorMeshItem, we use setData(x, y, z)
+        # Initialize with dummy X, Y, Z for a 10x10 grid
+        x_dummy = np.arange(11)
+        y_dummy = np.arange(11)
+        X_mesh, Y_mesh = np.meshgrid(x_dummy, y_dummy)
+        self.image_item.setData(X_mesh, Y_mesh, np.zeros((10, 10)))
         
-        # Color bar (HistogramLUTWidget)
-        self.lut = pg.HistogramLUTWidget()
-        self.lut.setImageItem(self.image_item)
-        self.lut.setBackground('#1e1e1e')
+        # Custom LUT for the heatmap
+        # self.lut = pg.HistogramLUTWidget()
+        # self.lut.setImageItem(self.image_item)
+        # self.lut.setBackground('#1e1e1e')
         
         plot_layout = QHBoxLayout()
         plot_layout.addWidget(self.heatmap_plot)
-        plot_layout.addWidget(self.lut)
+        # plot_layout.addWidget(self.lut) # Commented out as lut is not used with ImageItem directly here
         layout.addLayout(plot_layout)
 
         self.main_layout.addWidget(panel, 0, 1)
@@ -796,6 +800,8 @@ class TFP_TRWindow(QMainWindow):
             # Connect signals
             self.experiment_thread.started.connect(self.experiment_worker.run)
             self.experiment_worker.progress_updated.connect(self.on_experiment_progress)
+            self.experiment_worker.data_received.connect(self.update_hist_plot)
+            self.experiment_worker.results_updated.connect(self.update_heatmap)
             self.experiment_worker.results_ready.connect(self.on_experiment_results_ready)
             self.experiment_worker.error.connect(self.on_experiment_error)
             self.experiment_worker.finished.connect(self.on_experiment_finished)
@@ -849,13 +855,10 @@ class TFP_TRWindow(QMainWindow):
         self.progress_bar.setValue(progress)
         self.progress_label.setText(f"Progress: {progress}% - {status_text}")
 
-    def on_experiment_results_ready(self, results):
-        """Handle results from finished experiment."""
+    def on_experiment_results_ready(self, results, delay_array):
+        """Handle final results from experiment worker."""
         self.results = results
-
-        self.delay_array = np.zeros(self.results.shape)
-        for i in range(len(self.delays)):
-            self.delay_array[i, :] = np.arange(self.results.shape[1])*0.5-self.delays[i]
+        self.delay_array = delay_array
         print("Measurement results received.")
         self.save_results()
 
@@ -883,13 +886,11 @@ class TFP_TRWindow(QMainWindow):
                     
                     # Prepare datasets
                     freq = self.tfp_handler.freq_axis_func(self.nb_samples)
-                    abscissa = self.delay_array # This seems to be the time delay for each point
-                    psd = self.results
                     
                     # Store datasets in the chosen group
                     wrp.add_frequency(freq, target_group, name="Frequency")
-                    wrp.add_abscissa(abscissa, target_group, name="Abscissa")
-                    wrp.add_PSD(psd, target_group, name="PSD")
+                    wrp.add_abscissa(self.delay_array, target_group, name="Delays")
+                    wrp.add_PSD(self.results, target_group, name="PSD")
                     
                     # Add attributes
                     wrp.add_attributes({"SPECTROMETER.Type": "TFP"}, parent_group=target_group)
@@ -907,6 +908,43 @@ class TFP_TRWindow(QMainWindow):
         
         plt.colorbar()
         plt.show()
+
+    def update_heatmap(self, results, delay_array):
+        """Update the 2D heatmap with cumulative experiment data."""
+        if results is None or delay_array is None:
+            return
+            
+        # Get frequency axis
+        freq = self.tfp_handler.freq_axis_func(results.shape[1])
+        
+        # Add one last value with same values as last one
+        freq = np.append(freq, 2*freq[-1] - freq[-2])
+        
+        # Prepare X (Frequency) and Y (Time Delay)
+        # Frequency is constant per column in results
+        # Time Delay (delay_array) varies per point
+        
+        X = np.tile(freq[np.newaxis, :], (results.shape[0]+1, 1))
+        Y = np.zeros((delay_array.shape[0]+1, delay_array.shape[1]+1))
+        Y[:-1, :-1] = delay_array
+        Y[-1, :-1] = Y[-2, :-1] + 0.5
+        Y[:, -1] = Y[:, -2] + 0.5
+
+        
+        # Update the PColorMeshItem
+        # setData expects (X, Y, Z) where Z is the values
+        try:
+            self.image_item.setData(X, Y, results)
+        except Exception as e:
+            print(f"Heatmap update error: {e}")
+        
+        # Ensure plot labels are correct
+        self.heatmap_plot.setLabel('bottom', 'Frequency Shift', units='Hz')
+        self.heatmap_plot.setLabel('left', 'Time relative to pulse', units='ms')
+
+    def tfp_handlers(self):
+        # Small helper to get the right handler
+        return self.tfp_handler
 
     def on_experiment_error(self, message):
         """Handle errors from experiment worker."""

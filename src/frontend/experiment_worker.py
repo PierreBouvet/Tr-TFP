@@ -5,7 +5,9 @@ import time
 class ExperimentWorker(QObject):
     progress_updated = pyqtSignal(int, str)
     finished = pyqtSignal()
-    results_ready = pyqtSignal(np.ndarray)
+    results_ready = pyqtSignal(np.ndarray, np.ndarray)
+    results_updated = pyqtSignal(np.ndarray, np.ndarray)
+    data_received = pyqtSignal(np.ndarray)
     error = pyqtSignal(str)
 
     def __init__(self, tfp_handler, ni_handler, delays, nb_cycles, spectrum_len=1024):
@@ -34,7 +36,7 @@ class ExperimentWorker(QObject):
                     if not self._running:
                         break
 
-                    self.delay_array[i, :] = np.array(self.spectrum_len)*0.5-delay_ms
+                    self.delay_array[i, :] = np.arange(self.spectrum_len) * 0.5 - delay_ms
                     
                     # Update NI pulse delay (convert ms to seconds)
                     try:
@@ -55,6 +57,12 @@ class ExperimentWorker(QObject):
                         
                         # Store summed spectra in results with the 'i' shift
                         self.results[i, :] += np.array(spectrum)
+                        
+                        # Emit the latest spectrum for real-time visualization
+                        self.data_received.emit(np.array(spectrum))
+                        
+                        # Emit the cumulative results for the 2D map
+                        self.results_updated.emit(self.results, self.delay_array)
 
                     except StopIteration:
                         self.error.emit("Observation generator stopped prematurely.")
@@ -68,7 +76,7 @@ class ExperimentWorker(QObject):
                     break
                 
             if self._running:
-                self.results_ready.emit(self.results)
+                self.results_ready.emit(self.results, self.delay_array)
                 
         except Exception as e:
             self.error.emit(str(e))
