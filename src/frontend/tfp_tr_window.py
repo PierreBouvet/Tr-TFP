@@ -854,8 +854,8 @@ class TFP_TRWindow(QMainWindow):
         self.results = results
 
         self.delay_array = np.zeros(self.results.shape)
-        for i in range(self.results.shape[0]):
-            self.delay_array[i, :] = np.array(self.results.shape[1])*0.5-self.delays[i]
+        for i in range(len(self.delays)):
+            self.delay_array[i, :] = np.arange(self.results.shape[1])*0.5-self.delays[i]
         print("Measurement results received.")
         self.save_results()
 
