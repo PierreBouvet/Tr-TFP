@@ -37,7 +37,6 @@ class ExperimentWorker(QObject):
                         break
 
                     self.delay_array[i, :] = np.arange(self.spectrum_len) * 0.5 - delay_ms
-                    
                     # Update NI pulse delay (convert ms to seconds)
                     try:
                         self.ni_handler.stop_delayed_pulse()

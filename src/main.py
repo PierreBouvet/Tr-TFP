@@ -28,11 +28,6 @@ def main():
         splash = QSplashScreen(scaled_pixmap, Qt.WindowType.WindowStaysOnTopHint)
         splash.show()
         app.processEvents()
-
-    # Initialize handlers (logic to be expanded)
-    # This represents modules loading
-    # tfp = TFPHandler()
-    # ni = NIHandler()
     
     window = SpectrometerWindow()
     

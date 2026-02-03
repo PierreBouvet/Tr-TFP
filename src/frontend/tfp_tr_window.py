@@ -16,7 +16,8 @@ from backend.tfp_handler import TFPHandler
 from backend.ni_handler import NIHandler
 from frontend.tfp_worker import TFPWorker
 from frontend.experiment_worker import ExperimentWorker
-from PyQt6.QtCore import Qt, QTimer, QThread, pyqtSignal
+from frontend.plot_worker import PlotWorker
+from PyQt6.QtCore import Qt, QTimer, QThread, pyqtSignal, pyqtSlot
 
 import matplotlib.pyplot as plt
 
@@ -69,6 +70,8 @@ class CollapsibleSection(QWidget):
         return self.toggle_button.isChecked()
 
 class TFP_TRWindow(QMainWindow):
+    request_plot_update = pyqtSignal(np.ndarray, np.ndarray, object, tuple, float)
+    
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Time-resolved TFP Interface")
@@ -143,6 +146,8 @@ class TFP_TRWindow(QMainWindow):
         
         self.experiment_thread = None
         self.experiment_worker = None
+        
+        self.plot_worker = None
 
         # Timing variables
         self.experiment_start_time = 0
@@ -188,8 +193,8 @@ class TFP_TRWindow(QMainWindow):
         self.close()
 
     def setup_top_left_panel(self):
-        panel = QGroupBox("Signal Observation")
-        layout = QVBoxLayout(panel)
+        self.observation_panel = QGroupBox("Signal Observation")
+        layout = QVBoxLayout(self.observation_panel)
 
         # Variable storing the number of samples on the graph
         self.nb_samples = 0
@@ -226,7 +231,7 @@ class TFP_TRWindow(QMainWindow):
         self.temp_region = None
         self.drag_start_x = None
 
-        self.main_layout.addWidget(panel, 0, 0)
+        self.main_layout.addWidget(self.observation_panel, 0, 0)
 
     def setup_top_right_panel(self):
         panel = QGroupBox("Experiment Status")
@@ -262,8 +267,8 @@ class TFP_TRWindow(QMainWindow):
         self.main_layout.addWidget(panel, 0, 1)
 
     def setup_bottom_left_panel(self):
-        panel = QGroupBox("Experiment Parameters")
-        panel_layout = QVBoxLayout(panel)
+        self.parameters_panel = QGroupBox("Experiment Parameters")
+        panel_layout = QVBoxLayout(self.parameters_panel)
         panel_layout.setContentsMargins(5, 15, 5, 5)
         panel_layout.setSpacing(5)
 
@@ -345,7 +350,7 @@ class TFP_TRWindow(QMainWindow):
         panel_layout.addStretch()
         panel_layout.addWidget(self.connect_devices_btn)
 
-        self.main_layout.addWidget(panel, 1, 0)
+        self.main_layout.addWidget(self.parameters_panel, 1, 0)
 
     def on_cycles_changed(self, value):
         self.nb_cycles = value
@@ -770,21 +775,30 @@ class TFP_TRWindow(QMainWindow):
             return
             
         elif len(self.channel_regions) == 1:
-            self.start_btn.setEnabled(False)
+            self.set_ui_locked(True)
             self.stop_btn.setEnabled(True)
-            self.realign_btn.setEnabled(True)
 
             chan = self.scanned_channels[0]
             low, high = chan
             freq = self.tfp_handler.freq_axis_func(self.nb_samples)
 
-            idx0 = np.argmin(np.abs(freq - low)) # Time index gotten by multiplying by 0.5ms
+            # Extracting the indices of the chosen frequencies to scan
+            idx0 = np.argmin(np.abs(freq - low)) 
             idx1 = np.argmin(np.abs(freq - high))
+            self.chosen_freq = (low, high) # Storing chosen frequencies for live update
 
-            idx0 = idx0*0.5 - self.time_around_pulse_ms//2
-            idx1 = idx1*0.5 + self.time_around_pulse_ms//2
+            # Converting indices to time delays (in ms)
+            td0 = idx0*0.5 - self.time_around_pulse_ms/2 
+            td1 = idx1*0.5 + self.time_around_pulse_ms/2
+            self.delays = np.arange(td0, td1 + 0.5, 0.5) # Delays of pulse in ms
 
-            self.delays = np.arange(idx0, idx1 + 1, 0.5) # Delays of pulse in ms
+            # Set the ranges of the plot
+            self.heatmap_plot.setXRange(self.chosen_freq[0], self.chosen_freq[1])
+            self.heatmap_plot.setYRange(-self.time_around_pulse_ms * 1e-3 / 2, self.time_around_pulse_ms * 1e-3 / 2)
+
+            # Set plot labels
+            self.heatmap_plot.setLabel('bottom', 'Frequency Shift', units='Hz')
+            self.heatmap_plot.setLabel('left', 'Time relative to pulse', units='s')
         
             # Create thread and worker
             self.experiment_thread = QThread()
@@ -809,9 +823,20 @@ class TFP_TRWindow(QMainWindow):
             self.experiment_worker.finished.connect(self.experiment_worker.deleteLater)
             self.experiment_thread.finished.connect(self.experiment_thread.deleteLater)
             
+            # Setup Plotter thread
+            self.plot_thread = QThread()
+            self.plot_worker = PlotWorker()
+            self.plot_worker.moveToThread(self.plot_thread)
+            
+            # Connections for background plotting
+            self.request_plot_update.connect(self.plot_worker.process_data)
+            self.plot_worker.plot_ready.connect(self.on_plot_ready)
+            
+            self.plot_thread.start()
+            
             # Start clocks
             self.experiment_start_time = time.time()
-            self.clock_timer.start(1000) # Update every second
+            self.clock_timer.start(400) # Update every 400ms (cycle is 500ms)
 
             # Start
             self.experiment_thread.start()
@@ -831,12 +856,14 @@ class TFP_TRWindow(QMainWindow):
         
         if self.experiment_thread and self.experiment_thread.isRunning():
             self.experiment_thread.quit()
+            
+        if self.plot_thread and self.plot_thread.isRunning():
+            self.plot_thread.quit()
+            self.plot_thread.wait()
             self.experiment_thread.wait()
 
-        self.start_btn.setEnabled(True)
+        self.set_ui_locked(False)
         self.stop_btn.setEnabled(False)
-        self.realign_btn.setEnabled(False)
-        self.realign_btn.setText("Realign") # Ensure it's reset
         
         # Stop clocks
         self.clock_timer.stop()
@@ -857,6 +884,10 @@ class TFP_TRWindow(QMainWindow):
 
     def on_experiment_results_ready(self, results, delay_array):
         """Handle final results from experiment worker."""
+        if self.plot_thread and self.plot_thread.isRunning():
+            self.plot_thread.quit()
+            self.plot_thread.wait()
+
         self.results = results
         self.delay_array = delay_array
         print("Measurement results received.")
@@ -904,43 +935,32 @@ class TFP_TRWindow(QMainWindow):
 
         channels = np.tile(freq[np.newaxis, :], (self.delay_array.shape[0], 1))
 
-        plt.pcolormesh(self.delay_array, channels, self.results)
+        # plt.pcolormesh(self.delay_array, channels, self.results)
         
-        plt.colorbar()
-        plt.show()
+        # plt.colorbar()
+        # plt.show()
 
     def update_heatmap(self, results, delay_array):
-        """Update the 2D heatmap with cumulative experiment data."""
+        """Dispatches data processing to the PlotWorker thread."""
         if results is None or delay_array is None:
             return
-            
-        # Get frequency axis
-        freq = self.tfp_handler.freq_axis_func(results.shape[1])
         
-        # Add one last value with same values as last one
-        freq = np.append(freq, 2*freq[-1] - freq[-2])
-        
-        # Prepare X (Frequency) and Y (Time Delay)
-        # Frequency is constant per column in results
-        # Time Delay (delay_array) varies per point
-        
-        X = np.tile(freq[np.newaxis, :], (results.shape[0]+1, 1))
-        Y = np.zeros((delay_array.shape[0]+1, delay_array.shape[1]+1))
-        Y[:-1, :-1] = delay_array
-        Y[-1, :-1] = Y[-2, :-1] + 0.5
-        Y[:, -1] = Y[:, -2] + 0.5
+        # Emit signal to background thread
+        self.request_plot_update.emit(
+            results, 
+            delay_array, 
+            self.tfp_handler.freq_axis_func,
+            self.chosen_freq,
+            self.time_around_pulse_ms
+        )
 
-        
-        # Update the PColorMeshItem
-        # setData expects (X, Y, Z) where Z is the values
+    def on_plot_ready(self, X_scaled, Y, results):
+        """Performs the final GUI update with processed mesh data."""
         try:
-            self.image_item.setData(X, Y, results)
+            self.image_item.setData(X_scaled, Y, results)
         except Exception as e:
-            print(f"Heatmap update error: {e}")
-        
-        # Ensure plot labels are correct
-        self.heatmap_plot.setLabel('bottom', 'Frequency Shift', units='Hz')
-        self.heatmap_plot.setLabel('left', 'Time relative to pulse', units='ms')
+            print(f"Heatmap GUI update error: {e}")
+            
 
     def tfp_handlers(self):
         # Small helper to get the right handler
@@ -966,3 +986,11 @@ class TFP_TRWindow(QMainWindow):
             self.realign_btn.setText("Realign")
             self.stop_btn.setEnabled(True)
             print("Measurement resumed.")
+
+    def set_ui_locked(self, locked: bool):
+        """Disables/Enables UI interactions during measurement."""
+        self.observation_panel.setEnabled(not locked)
+        self.parameters_panel.setEnabled(not locked)
+        self.back_btn.setEnabled(not locked)
+        self.start_btn.setEnabled(not locked)
+        self.realign_btn.setEnabled(not locked)
