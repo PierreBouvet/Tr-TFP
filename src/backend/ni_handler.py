@@ -131,7 +131,7 @@ class NIHandler:
                 # Task exists, just update parameters on the fly
                 # High performance update
                 self.pulse_task.stop()
-                self.pulse_task.co_channels[0].co_pulse_initial_delay = delay
+                self.pulse_task.co_channels[0].co_pulse_time_initial_delay = delay
                 self.pulse_task.co_channels[0].co_pulse_high_time = pulse_width
                 self.pulse_task.start()
 
