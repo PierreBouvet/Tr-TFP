@@ -93,7 +93,7 @@ class TFPHandler:
                 nu = np.linspace(-10, 10, 512)
                 self.current_scan = lorentzian(nu, 1, -5, 1) + lorentzian(nu, 1, 5, 1) + np.random.rand(512) * 0.1
                 yield self.current_scan
-                time.sleep(0.4)
+                time.sleep(0.1)
                 continue
             
             else:
@@ -116,7 +116,7 @@ class TFPHandler:
                         self.current_scan.append(counts)
                 else:
                     # Small sleep to prevent busy waiting if no data
-                    time.sleep(0.001)
+                    time.sleep(0.0001)
 
     def stop_observation(self):
         """Signals the observe generator to stop."""
