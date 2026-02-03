@@ -10,7 +10,7 @@ from HDF5_BLS import Wrapper
 class HDF5SaveDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Save Results to HDF5_BLS")
+        self.setWindowTitle("HDF5 Saving Wizard")
         self.resize(500, 400)
         
         self.file_path = ""
