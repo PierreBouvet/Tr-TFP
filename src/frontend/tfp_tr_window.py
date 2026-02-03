@@ -141,6 +141,10 @@ class TFP_TRWindow(QMainWindow):
         self.pulse_length_ms = 1.0
         self.delays = None
         self.results = None
+        self.delay_array = None
+        
+        self.save_file_path = None
+        self.save_target_group = None
         
         self.observation_thread = None
         self.observation_worker = None
@@ -782,6 +786,26 @@ class TFP_TRWindow(QMainWindow):
             return
             
         elif len(self.channel_regions) == 1:
+            # 1. Select save location BEFORE starting
+            try:
+                from frontend.hdf5_save_dialog import HDF5SaveDialog
+                dialog = HDF5SaveDialog(self)
+                if not dialog.exec():
+                    print("Measurement cancelled: No save location selected.")
+                    return
+                
+                selection = dialog.get_selection()
+                self.save_file_path = selection["file_path"]
+                self.save_target_group = selection["selected_group"]
+                
+                if not self.save_file_path:
+                    QMessageBox.warning(self, "Save Error", "No file path selected. Measurement aborted.")
+                    return
+            except Exception as e:
+                QMessageBox.critical(self, "Error", f"Failed to initialize saving: {e}")
+                return
+
+            # 2. Proceed with measurement
             self.set_ui_locked(True)
             self.stop_btn.setEnabled(True)
 
@@ -901,41 +925,34 @@ class TFP_TRWindow(QMainWindow):
         self.save_results()
 
     def save_results(self):
-        """Prompts the user to save the experiment results in HDF5_BLS format."""
-        if self.results is None:
+        """Saves the experiment results to the pre-selected HDF5 location."""
+        if self.results is None or not self.save_file_path:
             return
 
         try:
-            from frontend.hdf5_save_dialog import HDF5SaveDialog
             from HDF5_BLS import Wrapper
         except ImportError as e:
-            QMessageBox.critical(self, "Import Error", f"Failed to load HDF5_BLS or saving dialog: {e}")
+            QMessageBox.critical(self, "Import Error", f"Failed to load HDF5_BLS: {e}")
             return
 
-        dialog = HDF5SaveDialog(self)
-        if dialog.exec():
-            selection = dialog.get_selection()
-            file_path = selection["file_path"]
-            target_group = selection["selected_group"]
-
-            if file_path:
-                try:
-                    wrp = Wrapper(file_path)
-                    
-                    # Prepare datasets
-                    freq = self.tfp_handler.freq_axis_func(self.nb_samples)
-                    
-                    # Store datasets in the chosen group
-                    wrp.add_frequency(freq, target_group, name="Frequency")
-                    wrp.add_abscissa(self.delay_array, target_group, name="Delays")
-                    wrp.add_PSD(self.results, target_group, name="PSD")
-                    
-                    # Add attributes
-                    wrp.add_attributes({"SPECTROMETER.Type": "TFP"}, parent_group=target_group)
-                    
-                    wrp.close()
-                except Exception as e:
-                    QMessageBox.critical(self, "Error", f"Failed to save results: {e}")
+        try:
+            wrp = Wrapper(self.save_file_path)
+            
+            # Prepare datasets
+            freq = self.tfp_handler.freq_axis_func(self.nb_samples)
+            
+            # Store datasets in the chosen group
+            wrp.add_frequency(freq, self.save_target_group, name="Frequency")
+            wrp.add_abscissa(self.delay_array, self.save_target_group, name="Delays")
+            wrp.add_PSD(self.results, self.save_target_group, name="PSD")
+            
+            # Add attributes
+            wrp.add_attributes({"SPECTROMETER.Type": "TFP"}, parent_group=self.save_target_group)
+            
+            wrp.close()
+            print(f"Results successfully saved to {self.save_file_path} in group {self.save_target_group}")
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Failed to save results: {e}")
 
         freq = self.tfp_handler.freq_axis_func(self.nb_samples) * 1e-9
 
