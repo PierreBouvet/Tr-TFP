@@ -354,12 +354,10 @@ class TFP_TRWindow(QMainWindow):
 
     def on_cycles_changed(self, value):
         self.nb_cycles = value
-        print(f"Number of cycles updated: {self.nb_cycles}")
         self.estimate_duration()
 
     def on_time_around_pulse_changed(self, value):
         self.time_around_pulse_ms = value
-        print(f"Time around pulse updated: {self.time_around_pulse_ms} ms")
         self.estimate_duration()
 
     def on_section_toggled(self, is_expanded):
@@ -521,7 +519,6 @@ class TFP_TRWindow(QMainWindow):
     def update_scanned_channels_list(self):
         """Synchronize scanned_channels list with current plot regions."""
         self.scanned_channels = [r.getRegion() for r in self.channel_regions]
-        print(f"Scanned channels updated: {self.scanned_channels}")
         
         # Enable/Disable "Remove channels" button
         has_regions = len(self.channel_regions) > 0
@@ -736,7 +733,6 @@ class TFP_TRWindow(QMainWindow):
 
         total_seconds = self.tfp_handler.estimate_duration(self.scanned_channels, self.nb_samples, self.time_around_pulse_ms, self.nb_cycles)
         self.total_duration_estimate = total_seconds
-        print("Total seconds: ", total_seconds)
         
         # Format as HH:MM:SS
         self.time_remaining_label.setText(self.format_time(total_seconds))
@@ -764,7 +760,6 @@ class TFP_TRWindow(QMainWindow):
         # Stop observation if running
         if self.observation_thread and self.observation_thread.isRunning():
             self.on_stop_observing_clicked()
-            print("Observation stopped to start measurement.")
 
         if len(self.channel_regions) == 0:
             QMessageBox.warning(
@@ -890,7 +885,6 @@ class TFP_TRWindow(QMainWindow):
 
         self.results = results
         self.delay_array = delay_array
-        print("Measurement results received.")
         self.save_results()
 
     def save_results(self):
@@ -927,7 +921,6 @@ class TFP_TRWindow(QMainWindow):
                     wrp.add_attributes({"SPECTROMETER.Type": "TFP"}, parent_group=target_group)
                     
                     wrp.close()
-                    print(f"Results saved to {file_path} in group {target_group}")
                 except Exception as e:
                     QMessageBox.critical(self, "Error", f"Failed to save results: {e}")
 
@@ -981,11 +974,9 @@ class TFP_TRWindow(QMainWindow):
         if self.realign_btn.text() == "Realign":
             self.realign_btn.setText("go back to measure")
             self.stop_btn.setEnabled(False)
-            print("Measurement paused for realignment.")
         else:
             self.realign_btn.setText("Realign")
             self.stop_btn.setEnabled(True)
-            print("Measurement resumed.")
 
     def set_ui_locked(self, locked: bool):
         """Disables/Enables UI interactions during measurement."""

@@ -54,8 +54,6 @@ class PlotWorker(QObject):
             # Final check before emitting
             if X.shape != (chosen_results.shape[0] + 1, chosen_results.shape[1] + 1):
                 return
-            
-            print(X[0, 0], X[-1, -1], Y[0, 0], Y[-1, -1], chosen_results.shape)
 
             self.plot_ready.emit(X, Y*1e-3, chosen_results)
             

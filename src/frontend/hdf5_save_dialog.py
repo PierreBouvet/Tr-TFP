@@ -123,7 +123,6 @@ class HDF5SaveDialog(QDialog):
             item = item.parent()
         
         self.selected_group = "/" + "/".join(path)
-        print(f"Selected group: {self.selected_group}")
 
     def create_new_group(self):
         if not self.file_path:

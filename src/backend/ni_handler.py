@@ -130,7 +130,6 @@ class NIHandler:
             self.pulse_task.triggers.start_trigger.retriggerable = True
             
             self.pulse_task.start()
-            print(f"Pulse task started: {self.counter_path} -> {self.output_terminal}")
 
         except Exception as e:
             print(f"Failed to start NI pulse: {e}")
@@ -146,7 +145,6 @@ class NIHandler:
             try:
                 self.pulse_task.stop()
                 self.pulse_task.close()
-                print("Pulse task stopped.")
             except Exception as e:
                 print(f"Error stopping pulse task: {e}")
             finally:
