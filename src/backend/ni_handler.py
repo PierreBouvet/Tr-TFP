@@ -99,41 +99,47 @@ class NIHandler:
 
     def start_delayed_pulse(self, delay, pulse_width=0.01):
         """
-        Start a hardware-retriggerable delayed pulse.
-        Based on working logic from test_ni_delay.py
+        Start or update a hardware-retriggerable delayed pulse.
+        Optimized to reuse the existing task if possible.
         """
         if self.is_mock:
             print(f"[MOCK] Starting pulse: delay={delay}s, width={pulse_width}s")
             return
 
         try:
-            # Stop any existing pulse task
-            self.stop_delayed_pulse()
-
-            self.pulse_task = nidaqmx.Task()
-            
-            # Configure the pulse generation
-            self.pulse_task.co_channels.add_co_pulse_chan_time(
-                counter=self.counter_path,
-                units=constants.TimeUnits.SECONDS,
-                idle_state=constants.Level.LOW,
-                initial_delay=delay,
-                low_time=0.001,
-                high_time=pulse_width
-            )
-            self.pulse_task.co_channels[0].co_pulse_term = self.output_terminal
-            
-            # Configure for hardware retriggering
-            self.pulse_task.triggers.start_trigger.cfg_dig_edge_start_trig(
-                trigger_source = self.source_terminal, 
-                trigger_edge = constants.Edge.RISING)
-            self.pulse_task.triggers.start_trigger.retriggerable = True
-            
-            self.pulse_task.start()
+            # If task doesn't exist, create and configure it
+            if self.pulse_task is None:
+                self.pulse_task = nidaqmx.Task()
+                self.pulse_task.co_channels.add_co_pulse_chan_time(
+                    counter=self.counter_path,
+                    units=constants.TimeUnits.SECONDS,
+                    idle_state=constants.Level.LOW,
+                    initial_delay=delay,
+                    low_time=0.001,
+                    high_time=pulse_width
+                )
+                self.pulse_task.co_channels[0].co_pulse_term = self.output_terminal
+                
+                # Configure for hardware retriggering
+                self.pulse_task.triggers.start_trigger.cfg_dig_edge_start_trig(
+                    trigger_source = self.source_terminal, 
+                    trigger_edge = constants.Edge.RISING)
+                self.pulse_task.triggers.start_trigger.retriggerable = True
+                
+                self.pulse_task.start()
+            else:
+                # Task exists, just update parameters on the fly
+                # High performance update
+                self.pulse_task.stop()
+                self.pulse_task.co_channels[0].co_pulse_initial_delay = delay
+                self.pulse_task.co_channels[0].co_pulse_high_time = pulse_width
+                self.pulse_task.start()
 
         except Exception as e:
-            print(f"Failed to start NI pulse: {e}")
-            self._show_warning(f"Failed to start NI pulse: {e}")
+            print(f"Failed to update NI pulse: {e}")
+            # If update fails, try to cleanup and reset
+            self.stop_delayed_pulse()
+            self._show_warning(f"Failed to update NI pulse: {e}")
 
     def stop_delayed_pulse(self):
         """Stop and close the delayed pulse task."""

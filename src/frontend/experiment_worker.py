@@ -38,11 +38,7 @@ class ExperimentWorker(QObject):
                         break
 
                     self.delay_array[i, :] = np.arange(self.spectrum_len) * 0.5 - delay_ms
-                    # Update NI pulse delay (convert ms to seconds)
-                    try:
-                        self.ni_handler.stop_delayed_pulse()
-                    except:
-                        pass
+                    # Update NI pulse delay (convert ms to seconds) efficiently
                     self.ni_handler.start_delayed_pulse(delay = delay_ms / 1000.0, pulse_width=self.pulse_length_ms / 1000.0)
                     
                     # Capture and sum nb_cycles spectra
