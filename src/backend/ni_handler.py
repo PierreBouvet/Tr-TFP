@@ -97,7 +97,7 @@ class NIHandler:
             self._show_warning(f"Failed to list PFI terminals: {e}")
             return []
 
-    def start_delayed_pulse(self, delay, pulse_width=0.05):
+    def start_delayed_pulse(self, delay, pulse_width=0.01):
         """
         Start a hardware-retriggerable delayed pulse.
         Based on working logic from test_ni_delay.py
