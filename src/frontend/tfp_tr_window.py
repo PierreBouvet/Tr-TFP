@@ -138,6 +138,7 @@ class TFP_TRWindow(QMainWindow):
         self.temp_region = None
         self.nb_cycles = 1
         self.time_around_pulse_ms = 1.0
+        self.pulse_length_ms = 1.0
         self.delays = None
         self.results = None
         
@@ -302,6 +303,14 @@ class TFP_TRWindow(QMainWindow):
         self.cycles_spin.valueChanged.connect(self.on_cycles_changed)
         
         stim_form.addRow("Number of cycles:", self.cycles_spin)
+
+        self.pulse_length = QSpinBox()
+        self.pulse_length.setRange(1, 1000000)
+        self.pulse_length.setValue(1)
+        self.pulse_length.setSingleStep(1)
+        self.pulse_length.valueChanged.connect(self.on_pulse_length_changed)
+        
+        stim_form.addRow("Pulse length (ms):", self.pulse_length)
         
         self.time_around_pulse_spin = QDoubleSpinBox()
         self.time_around_pulse_spin.setRange(0.5, 1000.0)
@@ -355,6 +364,9 @@ class TFP_TRWindow(QMainWindow):
     def on_cycles_changed(self, value):
         self.nb_cycles = value
         self.estimate_duration()
+
+    def on_pulse_length_changed(self, value):
+        self.pulse_length_ms = value
 
     def on_time_around_pulse_changed(self, value):
         self.time_around_pulse_ms = value
@@ -802,6 +814,7 @@ class TFP_TRWindow(QMainWindow):
                 self.ni_handler, 
                 self.delays, 
                 self.nb_cycles,
+                self.pulse_length_ms,
                 spectrum_len=self.nb_samples
             )
             self.experiment_worker.moveToThread(self.experiment_thread)
