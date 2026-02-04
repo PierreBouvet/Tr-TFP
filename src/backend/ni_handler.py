@@ -115,7 +115,7 @@ class NIHandler:
                     units=constants.TimeUnits.SECONDS,
                     idle_state=constants.Level.LOW,
                     initial_delay=delay,
-                    low_time=0.001,
+                    low_time=0.0001,
                     high_time=pulse_width
                 )
                 self.pulse_task.co_channels[0].co_pulse_term = self.output_terminal

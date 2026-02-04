@@ -307,14 +307,6 @@ class TFP_TRWindow(QMainWindow):
         self.cycles_spin.valueChanged.connect(self.on_cycles_changed)
         
         stim_form.addRow("Number of cycles:", self.cycles_spin)
-
-        self.pulse_length = QSpinBox()
-        self.pulse_length.setRange(1, 1000000)
-        self.pulse_length.setValue(1)
-        self.pulse_length.setSingleStep(1)
-        self.pulse_length.valueChanged.connect(self.on_pulse_length_changed)
-        
-        stim_form.addRow("Pulse length (ms):", self.pulse_length)
         
         self.time_around_pulse_spin = QDoubleSpinBox()
         self.time_around_pulse_spin.setRange(0.5, 1000.0)
@@ -368,9 +360,6 @@ class TFP_TRWindow(QMainWindow):
     def on_cycles_changed(self, value):
         self.nb_cycles = value
         self.estimate_duration()
-
-    def on_pulse_length_changed(self, value):
-        self.pulse_length_ms = value
 
     def on_time_around_pulse_changed(self, value):
         self.time_around_pulse_ms = value
@@ -773,20 +762,8 @@ class TFP_TRWindow(QMainWindow):
 
     def start_measure(self):
         """Starts the measurement process."""
-        # Stop observation if running
-        if self.observation_thread and self.observation_thread.isRunning():
-            self.on_stop_observing_clicked()
 
-        if len(self.channel_regions) == 0:
-            QMessageBox.warning(
-                self,
-                "Measurement Error",
-                "No windows selected. Please select at least one window."
-            )
-            return
-            
-        elif len(self.channel_regions) == 1:
-            # 1. Select save location BEFORE starting
+        def save_hdf5():
             try:
                 from frontend.hdf5_save_dialog import HDF5SaveDialog
                 dialog = HDF5SaveDialog(self)
@@ -804,6 +781,22 @@ class TFP_TRWindow(QMainWindow):
             except Exception as e:
                 QMessageBox.critical(self, "Error", f"Failed to initialize saving: {e}")
                 return
+
+        # Stop observation if running
+        if self.observation_thread and self.observation_thread.isRunning():
+            self.on_stop_observing_clicked()
+
+        if len(self.channel_regions) == 0:
+            QMessageBox.warning(
+                self,
+                "Measurement Error",
+                "No windows selected. Please select at least one window."
+            )
+            return
+            
+        elif len(self.channel_regions) == 1:
+            # 1. Select save location BEFORE starting
+            save_hdf5()
 
             # 2. Proceed with measurement
             self.set_ui_locked(True)
@@ -838,7 +831,6 @@ class TFP_TRWindow(QMainWindow):
                 self.ni_handler, 
                 self.delays, 
                 self.nb_cycles,
-                self.pulse_length_ms,
                 spectrum_len=self.nb_samples
             )
             self.experiment_worker.moveToThread(self.experiment_thread)
@@ -947,19 +939,22 @@ class TFP_TRWindow(QMainWindow):
             wrp.add_PSD(self.results, self.save_target_group, name="PSD")
             
             # Add attributes
-            wrp.add_attributes({"SPECTROMETER.Type": "TFP"}, parent_group=self.save_target_group)
+            attributes = {
+                "SPECTROMETER.Type": "TFP",
+                "MEASURE.Stimulation_window_(ms)": self.time_around_pulse_ms,
+                "MEASURE.First_channel_(GHz)": self.chosen_freq[0],
+                "MEASURE.Last_channel_(GHz)": self.chosen_freq[-1]
+            }
+            wrp.add_attributes(attributes, parent_group=self.save_target_group)
             
             wrp.close()
             print(f"Results successfully saved to {self.save_file_path} in group {self.save_target_group}")
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Failed to save results: {e}")
 
-        freq = self.tfp_handler.freq_axis_func(self.nb_samples) * 1e-9
-
-        channels = np.tile(freq[np.newaxis, :], (self.delay_array.shape[0], 1))
-
+        # freq = self.tfp_handler.freq_axis_func(self.nb_samples) * 1e-9
+        # channels = np.tile(freq[np.newaxis, :], (self.delay_array.shape[0], 1))
         # plt.pcolormesh(self.delay_array, channels, self.results)
-        
         # plt.colorbar()
         # plt.show()
 

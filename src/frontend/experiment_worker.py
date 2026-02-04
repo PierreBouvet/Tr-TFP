@@ -10,13 +10,12 @@ class ExperimentWorker(QObject):
     data_received = pyqtSignal(np.ndarray)
     error = pyqtSignal(str)
 
-    def __init__(self, tfp_handler, ni_handler, delays, nb_cycles, pulse_length_ms, spectrum_len=1024):
+    def __init__(self, tfp_handler, ni_handler, delays, nb_cycles, spectrum_len=1024):
         super().__init__()
         self.tfp_handler = tfp_handler
         self.ni_handler = ni_handler
         self.delays = delays
         self.nb_cycles = nb_cycles
-        self.pulse_length_ms = pulse_length_ms
         self.spectrum_len = spectrum_len
         self._running = False
         self.results = None
@@ -37,12 +36,14 @@ class ExperimentWorker(QObject):
                     if not self._running:
                         break
 
+                    # Update delay array with the values of delays to trigger corresponding to each point.
+                    # Each point of the spectrum takes 0.5ms to be captured, the delay is referenced from the first point.
                     self.delay_array[i, :] = np.arange(self.spectrum_len) * 0.5 - delay_ms
+
                     # Update NI pulse delay (convert ms to seconds) efficiently
-                    self.ni_handler.start_delayed_pulse(delay = delay_ms / 1000.0, pulse_width=self.pulse_length_ms / 1000.0)
+                    self.ni_handler.start_delayed_pulse(delay = delay_ms / 1000.0)
                     
                     # Capture and sum nb_cycles spectra
-                
                     if not self._running:
                         break
                     try:
