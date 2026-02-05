@@ -942,8 +942,8 @@ class TFP_TRWindow(QMainWindow):
             attributes = {
                 "SPECTROMETER.Type": "TFP",
                 "MEASURE.Stimulation_window_(ms)": self.time_around_pulse_ms,
-                "MEASURE.First_channel_(GHz)": self.chosen_freq[0],
-                "MEASURE.Last_channel_(GHz)": self.chosen_freq[-1]
+                "MEASURE.First_channel_(GHz)": self.chosen_freq[0]*1e-9,
+                "MEASURE.Last_channel_(GHz)": self.chosen_freq[-1]*1e-9
             }
             wrp.add_attributes(attributes, parent_group=self.save_target_group)
             
