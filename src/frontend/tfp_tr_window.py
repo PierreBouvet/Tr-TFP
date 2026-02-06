@@ -934,7 +934,7 @@ class TFP_TRWindow(QMainWindow):
             freq = self.tfp_handler.freq_axis_func(self.nb_samples)
             
             # Store datasets in the chosen group
-            wrp.add_frequency(freq, self.save_target_group, name="Frequency")
+            wrp.add_frequency(freq*1e-9, self.save_target_group, name="Frequency")
             wrp.add_abscissa(self.delay_array, self.save_target_group, name="Delays")
             wrp.add_PSD(self.results, self.save_target_group, name="PSD")
             

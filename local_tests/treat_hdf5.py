@@ -3,21 +3,24 @@ import matplotlib.pyplot as plt
 import numpy as np
 from HDF5_BLS_treat import Treat
 
-filepath = '/Volumes/LAUDATE/Data/260100 - TR-TFP/Glycerol stimulation 100ms range 20ms pulse 100V.h5'
+import os
+
+# print(os.listdir('/Volumes/LAUDATE/Data/260100 - TR-TFP'))
+
+filepath = '/Volumes/LAUDATE/Data/260100 - TR-TFP/EWOD 100V 20ms 100ms range.h5'
 
 wrp = Wrapper(filepath)
 
-# print(wrp)
+print(wrp)
 
-path = "Brillouin/Measures 2"
+path = "Brillouin/Bipolar off - 01"
 attributes = wrp.get_attributes(path)
 
 delays = wrp[path + '/Delays']
 freq = wrp[path + '/Frequency']*1e-9
 psd = wrp[path + '/PSD']
 
-fmin, fmax = attributes['MEASURE.First_channel_(GHz)']*1e-9, attributes['MEASURE.Last_channel_(GHz)']*1e-9
-
+fmin, fmax = attributes['MEASURE.First_channel_(GHz)'], attributes['MEASURE.Last_channel_(GHz)']
 
 freq_mask = np.where((freq >= fmin) & (freq <= fmax))[0]
 psd = psd[:, freq_mask]
@@ -47,10 +50,10 @@ plt.imshow(results, aspect='auto', origin='lower', extent=[fmin, fmax, delay_min
 plt.xlabel("Frequency shift(GHz)")
 plt.ylabel("Delay from pulse (ms)")
 
-x0 = [-15.7]
+x0 = [-9.5, 9.5]
 nature = ['Anti-Stokes']
 dx=5
-linewidth_max = 10
+linewidth_max = 2
 
 # Initialising the Treat object on the a doublet of frequency and PSD
 treat = Treat(frequency = freq, PSD = results)
