@@ -7,13 +7,13 @@ import os
 
 # print(os.listdir('/Volumes/LAUDATE/Data/260100 - TR-TFP'))
 
-filepath = '/Volumes/LAUDATE/Data/260100 - TR-TFP/EWOD 100V 20ms 100ms range.h5'
+filepath = '/Volumes/LAUDATE/Data/260100 - TR-TFP/All_Measures.h5'
 
 wrp = Wrapper(filepath)
 
-print(wrp)
+# print(wrp.get_children_elements('Brillouin/Corn oil'))
 
-path = "Brillouin/Bipolar off - 01"
+path = "Brillouin/Corn oil/1mus sine wave 100kcycles 10Vpp 200ms"
 attributes = wrp.get_attributes(path)
 
 delays = wrp[path + '/Delays']
@@ -46,14 +46,14 @@ for i in range(psd.shape[0]):
             pos_delay = np.where(delay_axis == delay)[0][0]
             results[pos_delay, j] = psd[i, j]
 
-plt.imshow(results, aspect='auto', origin='lower', extent=[fmin, fmax, delay_min, delay_max])
-plt.xlabel("Frequency shift(GHz)")
-plt.ylabel("Delay from pulse (ms)")
+# plt.imshow(results, aspect='auto', origin='lower', extent=[fmin, fmax, delay_min, delay_max])
+# plt.xlabel("Frequency shift(GHz)")
+# plt.ylabel("Delay from pulse (ms)")
 
-x0 = [-9.5, 9.5]
-nature = ['Anti-Stokes']
-dx=5
-linewidth_max = 2
+x0 = [-8.8, 9.4]
+nature = ['Anti-Stokes', 'Stokes']
+dx = 4
+linewidth_max = 10
 
 # Initialising the Treat object on the a doublet of frequency and PSD
 treat = Treat(frequency = freq, PSD = results)
@@ -75,7 +75,7 @@ for pt, nat in zip(x0, nature):
     treat.add_point(position_center_window=pt, type_pnt=nat, window_width=2)
 
 # Defining the model for fitting the peaks
-treat.define_model(model="DHO", elastic_correction=False) 
+treat.define_model(model="DHO", elastic_correction=True) 
 
 # Estimating the linewidth from selected peaks
 treat.estimate_width_inelastic_peaks(max_width_guess=5)
@@ -92,11 +92,6 @@ treat.single_fit_all_inelastic(guess_offset=True,
 # Applying the algorithm to all the spectra (in the case where PSD is a 2D array)
 treat.apply_algorithm_on_all()
 
-treat.combine_results_FSR(FSR=200, keep_max_amplitude=False, amplitude_weight=False, shift_err_weight=False, position=None)
-
-wrp.add_treated_data(path, name_group="Treated", treat = treat, overwrite=True)
-wrp.add_abscissa(delay_axis, parent_group=f'{path}/Treated', name="Time around pulse (ms)", unit="ms", dim_start=0, dim_end=1, overwrite=True)
-
 shift = treat.shift
 shift_err = treat.shift_var**0.5
 linewidth = treat.linewidth
@@ -104,24 +99,60 @@ linewidth_err = treat.linewidth_var**0.5
 blt = treat.BLT
 blt_err = treat.BLT_var**0.25
 
-
 plt.figure()
 plt.subplot(311)
-plt.errorbar(delay_axis, shift, yerr=shift_err)
+plt.plot(delay_axis, -shift[:,0])
+plt.plot(delay_axis, shift[:,1])
 plt.xlabel("Delay from pulse (ms)")
 plt.ylabel("Frequency shift (GHz)")
 plt.subplot(312)
-plt.errorbar(delay_axis, linewidth, yerr=linewidth_err)
+plt.plot(delay_axis, linewidth[:,0])
+plt.plot(delay_axis, linewidth[:,1])
 plt.xlabel("Delay from pulse (ms)")
 plt.ylabel("Linewidth (GHz)")
 plt.subplot(313)
-plt.errorbar(delay_axis, blt, yerr=blt_err)
+plt.plot(delay_axis, blt[:,0])
+plt.plot(delay_axis, blt[:,1])
 plt.xlabel("Delay from pulse (ms)")
 plt.ylabel("BLT")
 
 plt.figure()
-plt.plot(shift, linewidth)
+plt.plot(shift[:,0], linewidth[:,0])
+plt.plot(shift[:,1], linewidth[:,1])
 plt.xlabel("Frequency shift (GHz)")
 plt.ylabel("Linewidth (GHz)")
+
+
+treat.combine_results_FSR(FSR=200, keep_max_amplitude=False, amplitude_weight=False, shift_err_weight=False, position=None)
+
+wrp.add_treated_data(path, name_group="Treated", treat = treat, overwrite=True)
+wrp.add_abscissa(delay_axis, parent_group=f'{path}/Treated', name="Time around pulse (ms)", unit="ms", dim_start=0, dim_end=1, overwrite=True)
+
+# shift = treat.shift
+# shift_err = treat.shift_var**0.5
+# linewidth = treat.linewidth
+# linewidth_err = treat.linewidth_var**0.5
+# blt = treat.BLT
+# blt_err = treat.BLT_var**0.5
+
+# plt.figure()
+# plt.subplot(311)
+# plt.errorbar(delay_axis, shift, yerr=shift_err)
+# plt.xlabel("Delay from pulse (ms)")
+# plt.ylabel("Frequency shift (GHz)")
+# plt.subplot(312)
+# plt.errorbar(delay_axis, linewidth, yerr=linewidth_err)
+# plt.xlabel("Delay from pulse (ms)")
+# plt.ylabel("Linewidth (GHz)")
+# plt.subplot(313)
+# plt.errorbar(delay_axis, blt, yerr=blt_err)
+# plt.xlabel("Delay from pulse (ms)")
+# plt.ylabel("BLT")
+
+# plt.figure()
+# plt.plot(shift, linewidth)
+# plt.xlabel("Frequency shift (GHz)")
+# plt.ylabel("Linewidth (GHz)")
+
 
 plt.show()

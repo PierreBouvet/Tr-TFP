@@ -87,18 +87,21 @@ class HDF5SaveDialog(QDialog):
             self.new_group_btn.setEnabled(True)
             self.save_btn.setEnabled(True)
 
-    def refresh_tree(self):
+    def refresh_tree(self, expand_path=None):
         self.tree.clear()
         if not os.path.exists(self.file_path):
-            root = QTreeWidgetItem(self.tree, ["/"])
+            root = QTreeWidgetItem(self.tree, ["Brillouin"])
             self.tree.addTopLevelItem(root)
             return
 
         try:
             with h5py.File(self.file_path, 'r') as f:
-                root_item = QTreeWidgetItem(self.tree, ["/"])
-                self.populate_tree(f, root_item)
+                root_item = QTreeWidgetItem(self.tree, ["Brillouin"])
+                self.populate_tree(f['Brillouin'], root_item)
                 root_item.setExpanded(True)
+                
+            if expand_path:
+                self.expand_to_path(expand_path)
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Failed to read HDF5 file: {e}")
 
@@ -134,14 +137,47 @@ class HDF5SaveDialog(QDialog):
                 from HDF5_BLS import Wrapper
                 # Use Wrapper to create the group to ensure it follows any HDF5_BLS logic
                 wrp = Wrapper(self.file_path)
-                # If selected_group is root, parent is "/"
-                # Logic: create_group(name, parent_group, type)
-                # Based on doc, 'type' can be "Measure" for instance.
                 wrp.create_group(group_name, self.selected_group, "Measure")
                 wrp.close()
-                self.refresh_tree()
+                
+                # Calculate the path of the new group to expand to it
+                if self.selected_group == "/":
+                    new_group_path = "/" + group_name
+                else:
+                    new_group_path = self.selected_group + "/" + group_name
+                
+                self.refresh_tree(expand_path=new_group_path)
             except Exception as e:
                 QMessageBox.critical(self, "Error", f"Failed to create group: {e}")
+
+    def expand_to_path(self, path):
+        if path == "/":
+            root = self.tree.topLevelItem(0)
+            if root:
+                root.setSelected(True)
+                self.tree.scrollToItem(root)
+            return
+
+        parts = [p for p in path.split("/") if p]
+        current_item = self.tree.topLevelItem(0) # Should be "/"
+        
+        if not current_item:
+            return
+
+        for part in parts[1:]:
+            found = False
+            for i in range(current_item.childCount()):
+                child = current_item.child(i)
+                if child.text(0) == part:
+                    current_item = child
+                    current_item.setExpanded(True)
+                    found = True
+                    break
+            if not found:
+                return
+
+        current_item.setSelected(True)
+        self.tree.scrollToItem(current_item)
 
     def get_selection(self):
         self.wrp.close()

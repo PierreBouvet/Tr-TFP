@@ -952,12 +952,6 @@ class TFP_TRWindow(QMainWindow):
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Failed to save results: {e}")
 
-        # freq = self.tfp_handler.freq_axis_func(self.nb_samples) * 1e-9
-        # channels = np.tile(freq[np.newaxis, :], (self.delay_array.shape[0], 1))
-        # plt.pcolormesh(self.delay_array, channels, self.results)
-        # plt.colorbar()
-        # plt.show()
-
     def update_heatmap(self, results, delay_array):
         """Dispatches data processing to the PlotWorker thread."""
         if results is None or delay_array is None:
