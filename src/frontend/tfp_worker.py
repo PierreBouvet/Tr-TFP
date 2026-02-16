@@ -5,16 +5,17 @@ class TFPWorker(QObject):
     data_received = pyqtSignal(list)
     finished = pyqtSignal()
 
-    def __init__(self, tfp_handler):
+    def __init__(self, tfp_handler, expected_length=None):
         super().__init__()
         self.tfp_handler = tfp_handler
+        self.expected_length = expected_length
         self._running = False
 
     def run(self):
         self._running = True
         # If the handler is not connected, it will use the mock data generator 
         # as implemented in the observe method.
-        for scan_data in self.tfp_handler.observe():
+        for scan_data in self.tfp_handler.observe(expected_length=self.expected_length):
             if not self._running:
                 break
             self.data_received.emit(scan_data)

@@ -79,7 +79,7 @@ class TFPHandler:
         range_Hz = 2*scan_range / lmbda * FSR_Hz # From TFP manual
         self.freq_axis_func = lambda nb_samples: np.linspace(-range_Hz/2, range_Hz/2, nb_samples)
 
-    def observe(self):
+    def observe(self, expected_length=None):
         """
         Continuously reads serial data and yields complete spectra.
         This is a generator that yields a list representing a full scan.
@@ -90,8 +90,11 @@ class TFPHandler:
         while self._is_observing:
             if not self.serial_conn or not self.serial_conn.is_open:
                 lorentzian = lambda x, A, x0, sigma: A * (sigma**2 / ((x - x0)**2 + sigma**2))
-                nu = np.linspace(-10, 10, 512)
-                self.current_scan = lorentzian(nu, 1, -5, 1) + lorentzian(nu, 1, 5, 1) + np.random.rand(512) * 0.1
+                # Mock data: generate based on expected length if provided, else define default 512
+                N = expected_length if expected_length else 512
+                nu = np.linspace(-10, 10, N)
+                
+                self.current_scan = lorentzian(nu, 1, -5, 1) + lorentzian(nu, 1, 5, 1) + np.random.rand(N) * 0.1
                 yield self.current_scan
                 time.sleep(0.01)
                 continue
@@ -103,7 +106,8 @@ class TFPHandler:
                     # Case: Retrace Phase (Scan finished)
                     if raw_byte == self.RETRACE_MARKER:
                         if self.current_scan:
-                            yield self.current_scan
+                            if expected_length is None or len(self.current_scan) == expected_length:
+                                yield self.current_scan
                             self.current_scan = []
                         continue
                     

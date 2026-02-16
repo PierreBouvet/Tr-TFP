@@ -3,7 +3,7 @@ import numpy as np
 import pyqtgraph as pg
 from PyQt6.QtWidgets import (
     QMainWindow, QVBoxLayout, QHBoxLayout, QWidget, QPushButton, QLabel, 
-    QGroupBox, QLineEdit, QFormLayout, QSpinBox, QMessageBox, QFileDialog, QCheckBox, QApplication
+    QGroupBox, QLineEdit, QFormLayout, QSpinBox, QMessageBox, QFileDialog, QCheckBox, QApplication, QComboBox
 )
 from PyQt6.QtCore import Qt, QThread, pyqtSignal
 from PyQt6.QtGui import QFont
@@ -83,7 +83,7 @@ class TFP_TIWindow(QMainWindow):
                 padding: 8px;
             }
             QPushButton:hover { background-color: #505050; }
-            QLineEdit, QSpinBox {
+            QLineEdit, QSpinBox, QComboBox {
                 background-color: #3d3d3d;
                 color: #ffffff;
                 border: 1px solid #555;
@@ -149,9 +149,13 @@ class TFP_TIWindow(QMainWindow):
         layout = QVBoxLayout(self.bottom_panel)
         layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         
-        # 1. TFP Frequency Section
-        self.freq_section = CollapsibleSection("TFP channel frequency")
+        # 1. TFP Parameters Section
+        self.freq_section = CollapsibleSection("TFP parameters")
         freq_form = QFormLayout()
+        
+        self.nb_channels_cb = QComboBox()
+        self.nb_channels_cb.addItems(["256", "512", "1024"])
+        self.nb_channels_cb.setCurrentText("512") # Default
         
         self.wavelength = QLineEdit()
         self.wavelength.setPlaceholderText("nm")
@@ -165,6 +169,7 @@ class TFP_TIWindow(QMainWindow):
         self.scanning_range.setPlaceholderText("µm (piezo)")
         self.scanning_range.editingFinished.connect(self.update_frequency_axis)
 
+        freq_form.addRow("Number of channels:", self.nb_channels_cb)
         freq_form.addRow("Wavelength (nm):", self.wavelength)
         freq_form.addRow("Mirror spacing (mm):", self.mirror_spacing)
         freq_form.addRow("Scanning range (nm):", self.scanning_range)
@@ -237,8 +242,10 @@ class TFP_TIWindow(QMainWindow):
         self.observe_btn.setEnabled(False)
         self.stop_observe_btn.setEnabled(True)
         
+        nb_channels = int(self.nb_channels_cb.currentText())
+        
         self.observation_thread = QThread()
-        self.observation_worker = TFPWorker(self.tfp_handler)
+        self.observation_worker = TFPWorker(self.tfp_handler, expected_length=nb_channels)
         self.observation_worker.moveToThread(self.observation_thread)
         
         self.observation_thread.started.connect(self.observation_worker.run)
@@ -292,9 +299,12 @@ class TFP_TIWindow(QMainWindow):
         save_individual = self.save_individual_cb.isChecked()
         individual_spectra = [] if save_individual else None
         
+        # Get expected length
+        nb_channels = int(self.nb_channels_cb.currentText())
+        
         try:
             # We need to manually drive the handler's generator
-            spectra_gen = self.tfp_handler.observe()
+            spectra_gen = self.tfp_handler.observe(expected_length=nb_channels)
             accumulated = None
             
             for i in range(nb_cycles):
