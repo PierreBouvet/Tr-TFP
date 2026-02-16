@@ -598,7 +598,7 @@ class TFP_TRWindow(QMainWindow):
         self.main_layout.addWidget(panel, 1, 1)
 
     def on_connect_devices(self):
-        dialog = ConnectionDialog(self)
+        dialog = ConnectionDialog(self, show_ni=True)
         if dialog.exec():
             selection = dialog.get_selection()
             print(f"Connecting to TFP on {selection['tfp_port']} and NI device {selection['ni_device']}")
@@ -973,7 +973,6 @@ class TFP_TRWindow(QMainWindow):
         except Exception as e:
             print(f"Heatmap GUI update error: {e}")
             
-
     def tfp_handlers(self):
         # Small helper to get the right handler
         return self.tfp_handler

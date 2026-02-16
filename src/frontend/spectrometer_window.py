@@ -97,7 +97,10 @@ class SpectrometerWindow(QMainWindow):
         return button
 
     def on_invariant_clicked(self):
-        QMessageBox.information(self, "Not implemented yet", "The TFP time-invariant measures module is under development.")
+        from frontend.tfp_ti_window import TFP_TIWindow
+        self.ti_viewer = TFP_TIWindow()
+        self.ti_viewer.show()
+        self.close()
 
     def on_resolved_clicked(self):
         from frontend.tfp_tr_window import TFP_TRWindow
