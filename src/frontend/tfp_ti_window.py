@@ -3,7 +3,7 @@ import numpy as np
 import pyqtgraph as pg
 from PyQt6.QtWidgets import (
     QMainWindow, QVBoxLayout, QHBoxLayout, QWidget, QPushButton, QLabel, 
-    QGroupBox, QLineEdit, QFormLayout, QSpinBox, QMessageBox, QFileDialog
+    QGroupBox, QLineEdit, QFormLayout, QSpinBox, QMessageBox, QFileDialog, QCheckBox, QApplication
 )
 from PyQt6.QtCore import Qt, QThread, pyqtSignal
 from PyQt6.QtGui import QFont
@@ -74,17 +74,18 @@ class TFP_TIWindow(QMainWindow):
                 color: #e1e1e1;
                 font-weight: bold;
             }
-            QLabel { color: #e1e1e1; }
+            QLabel { color: #ffffff; }
+            QCheckBox { color: #ffffff; spacing: 5px; }
             QPushButton {
                 background-color: #3d3d3d;
-                color: #e1e1e1;
+                color: #ffffff;
                 border-radius: 4px;
                 padding: 8px;
             }
             QPushButton:hover { background-color: #505050; }
             QLineEdit, QSpinBox {
                 background-color: #3d3d3d;
-                color: #e1e1e1;
+                color: #ffffff;
                 border: 1px solid #555;
                 padding: 4px;
             }
@@ -140,7 +141,7 @@ class TFP_TIWindow(QMainWindow):
         self.connect_btn.setStyleSheet("background-color: #2d5a27;")
         btn_layout.addWidget(self.connect_btn)
         
-        self.main_layout.addWidget(self.top_panel, 60) # 60% stretch
+        self.main_layout.addWidget(self.top_panel, 1) # Maximize stretch
 
     def setup_bottom_panel(self):
         """Bottom Panel: Collapsible Options"""
@@ -182,6 +183,9 @@ class TFP_TIWindow(QMainWindow):
         form.addRow("Number of cycles:", self.cycles_spin)
         measure_layout.addLayout(form)
         
+        self.save_individual_cb = QCheckBox("Save individual spectra")
+        measure_layout.addWidget(self.save_individual_cb, alignment=Qt.AlignmentFlag.AlignCenter)
+        
         self.start_measure_btn = QPushButton("Start Measure")
         self.start_measure_btn.setStyleSheet("background-color: #2d5a27; font-size: 14px; padding: 10px;")
         self.start_measure_btn.clicked.connect(self.run_automated_measure)
@@ -195,7 +199,7 @@ class TFP_TIWindow(QMainWindow):
         for section in self.sections:
             section.toggled.connect(self.on_section_toggled)
 
-        self.main_layout.addWidget(self.bottom_panel, 40) # 40% stretch
+        self.main_layout.addWidget(self.bottom_panel, 0) # Minimize stretch
 
     def setup_navigation_panel(self):
         nav_layout = QHBoxLayout()
@@ -270,7 +274,6 @@ class TFP_TIWindow(QMainWindow):
         # 1. Stop observation if running
         if self.observe_btn.isEnabled() == False:
             self.stop_observation()
-            # Wait a bit? Or simple flag check
         
         # 2. Get Filename
         from frontend.hdf5_save_dialog import HDF5SaveDialog
@@ -281,14 +284,13 @@ class TFP_TIWindow(QMainWindow):
         filepath = selection["file_path"]
         group = selection["selected_group"]
         
-        # 3. Perform Acquisition (Blocking for now, or thread?)
-        # For simplicity in this new window, let's do a blocking loop with progress dialog,
-        # OR reuse a simplified worker. Let's do a simple loop here for first iteration.
-        
+        # 3. Perform Acquisition
         nb_cycles = self.cycles_spin.value()
-        
         self.start_measure_btn.setEnabled(False)
         self.start_measure_btn.setText("Measuring...")
+        
+        save_individual = self.save_individual_cb.isChecked()
+        individual_spectra = [] if save_individual else None
         
         try:
             # We need to manually drive the handler's generator
@@ -297,22 +299,35 @@ class TFP_TIWindow(QMainWindow):
             
             for i in range(nb_cycles):
                 spectrum = next(spectra_gen)
+                
+                if save_individual:
+                    individual_spectra.append(np.array(spectrum, dtype=float))
+                
                 if accumulated is None:
                     accumulated = np.array(spectrum, dtype=float)
                 else:
                     if len(spectrum) == len(accumulated):
                         accumulated += spectrum
                 
-                # Process events to keep UI responsive
-                QMessageBox.information(self, "Info", f"Cycle {i+1}/{nb_cycles}") if i % 10 == 0 else None 
-                # ^ That's annoying. Let's just print or update label
                 self.start_measure_btn.setText(f"Measuring... {i+1}/{nb_cycles}")
                 sys.stdout.flush()
+                
+                # Visualize current spectrum
+                self.update_plot(spectrum)
+                
+                # Process events to stay responsive (simple hack for now)
+                QThread.msleep(1)
+                QApplication.processEvents() # Ensure UI redraws
                 
             self.tfp_handler.stop_observation()
             
             # Save
-            self.save_data(filepath, group, accumulated)
+            if save_individual and individual_spectra:
+                data_to_save = np.array(individual_spectra)
+            else:
+                data_to_save = accumulated
+                
+            self.save_data(filepath, group, data_to_save, individual=save_individual)
             
         except Exception as e:
             QMessageBox.critical(self, "Error", str(e))
@@ -320,31 +335,36 @@ class TFP_TIWindow(QMainWindow):
             self.start_measure_btn.setEnabled(True)
             self.start_measure_btn.setText("Start Measure")
 
-    def save_data(self, filepath, group_name, data):
+    def save_data(self, filepath, group_name, data, individual=False):
         try:
             from HDF5_BLS import Wrapper
             wrp = Wrapper(filepath)
             
-            freq = self.tfp_handler.freq_axis_func(len(data))
+            # If individual: data shape is (nb_cycles, nb_freq)
+            # If accumulated: data shape is (nb_freq,) -> reshape to (1, nb_freq)
             
-            # Create sub-group for this specific run? Or just datasets?
-            # Let's save as 'Spectrum_N'
-            # Check existing to increment? The Dialog handles selection. Let's assume user picked a target.
-            
-            # Reshape data to 2D (1 x N_freq) for add_PSD compatibility
-            psd_data = np.atleast_2d(data)
+            if individual:
+                psd_data = data
+                n_cycles = data.shape[0]
+                n_freq = data.shape[1]
+                # Time array: just index or simple counter for now, as it is time-invariant
+                time_array = np.arange(n_cycles) 
+            else:
+                psd_data = np.atleast_2d(data)
+                n_freq = len(data)
+                time_array = np.array([0.0])
+
+            freq = self.tfp_handler.freq_axis_func(n_freq)
             
             wrp.add_frequency(freq*1e-9, group_name, name="Frequency") # GHz
-            
-            # Add a dummy delay of 0 since this is time-invariant
-            wrp.add_abscissa(np.array([0.0]), group_name, name="Delays")
-            
+            wrp.add_abscissa(time_array, group_name, name="Delays") # Use Delays as generic time/index axis
             wrp.add_PSD(psd_data, group_name, name="PSD")
             
             # Attributes
             attrs = {
                 "Cycles": self.cycles_spin.value(),
-                "Type": "Time-Invariant"
+                "Type": "Time-Invariant",
+                "Mode": "Individual" if individual else "Accumulated"
             }
             wrp.add_attributes(attrs, parent_group=group_name)
             wrp.close()
