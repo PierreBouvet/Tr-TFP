@@ -11,6 +11,7 @@ from PyQt6.QtGui import QFont
 from backend.tfp_handler import TFPHandler
 from frontend.tfp_worker import TFPWorker
 from frontend.connection_dialog import ConnectionDialog
+import time
 
 class CollapsibleSection(QWidget):
     toggled = pyqtSignal(bool)
@@ -297,7 +298,12 @@ class TFP_TIWindow(QMainWindow):
         self.start_measure_btn.setText("Measuring...")
         
         save_individual = self.save_individual_cb.isChecked()
-        individual_spectra = [] if save_individual else None
+        if save_individual:
+            individual_spectra = [] 
+            delays = []
+        else:
+            individual_spectra = None
+            delays = None
         
         # Get expected length
         nb_channels = int(self.nb_channels_cb.currentText())
@@ -307,12 +313,14 @@ class TFP_TIWindow(QMainWindow):
             spectra_gen = self.tfp_handler.observe(expected_length=nb_channels)
             accumulated = None
             
+            start_time = time.time() 
+
             for i in range(nb_cycles):
                 spectrum = next(spectra_gen)
                 
                 if save_individual:
                     individual_spectra.append(np.array(spectrum, dtype=float))
-                
+                    delays.append(time.time() - start_time)
                 if accumulated is None:
                     accumulated = np.array(spectrum, dtype=float)
                 else:
@@ -334,10 +342,11 @@ class TFP_TIWindow(QMainWindow):
             # Save
             if save_individual and individual_spectra:
                 data_to_save = np.array(individual_spectra)
+                time_to_save = np.array(delays)
             else:
                 data_to_save = accumulated
                 
-            self.save_data(filepath, group, data_to_save, individual=save_individual)
+            self.save_data(filepath, group, data_to_save, time_array=time_to_save, individual=save_individual)
             
         except Exception as e:
             QMessageBox.critical(self, "Error", str(e))
@@ -345,7 +354,7 @@ class TFP_TIWindow(QMainWindow):
             self.start_measure_btn.setEnabled(True)
             self.start_measure_btn.setText("Start Measure")
 
-    def save_data(self, filepath, group_name, data, individual=False):
+    def save_data(self, filepath, group_name, data, time_array=None, individual=False):
         try:
             from HDF5_BLS import Wrapper
             wrp = Wrapper(filepath)
@@ -358,7 +367,7 @@ class TFP_TIWindow(QMainWindow):
                 n_cycles = data.shape[0]
                 n_freq = data.shape[1]
                 # Time array: just index or simple counter for now, as it is time-invariant
-                time_array = np.arange(n_cycles) 
+                time_array = time_array
             else:
                 psd_data = np.atleast_2d(data)
                 n_freq = len(data)
