@@ -14,10 +14,11 @@ except ImportError:
 from backend.ni_handler import NIHandler
 
 class ConnectionDialog(QDialog):
-    def __init__(self, parent=None, show_ni=True):
+    def __init__(self, parent=None, show_ni=True, show_ni_output=True):
         super().__init__(parent)
         self.setWindowTitle("Hardware Connection Management")
         self.setMinimumWidth(500)
+        # ... (style omitted for brevity in instruction, keeping same as original)
         self.setStyleSheet("""
             QDialog {
                 background-color: #1e1e1e;
@@ -57,6 +58,7 @@ class ConnectionDialog(QDialog):
         self.layout = QVBoxLayout(self)
         self.ni_handler = NIHandler()
         self.show_ni = show_ni
+        self.show_ni_output = show_ni_output
 
         # Main Panels Layout
         self.panels_layout = QHBoxLayout()
@@ -77,7 +79,6 @@ class ConnectionDialog(QDialog):
             self.ni_device_cb = QComboBox()
             self.ni_counter_cb = QComboBox()
             self.ni_source_cb = QComboBox()
-            self.ni_output_cb = QComboBox()
             
             self.ni_device_cb.currentTextChanged.connect(self.update_ni_slots)
             
@@ -86,7 +87,12 @@ class ConnectionDialog(QDialog):
             self.ni_layout.addRow("Device/Module:", self.ni_device_cb)
             self.ni_layout.addRow("Counter Path:", self.ni_counter_cb)
             self.ni_layout.addRow("Source Terminal:", self.ni_source_cb)
-            self.ni_layout.addRow("Output Terminal:", self.ni_output_cb)
+            
+            if self.show_ni_output:
+                self.ni_output_cb = QComboBox()
+                self.ni_layout.addRow("Output Terminal:", self.ni_output_cb)
+            else:
+                self.ni_output_cb = None
             
             self.panels_layout.addWidget(self.ni_group)
 
@@ -134,7 +140,8 @@ class ConnectionDialog(QDialog):
             
         self.ni_counter_cb.clear()
         self.ni_source_cb.clear()
-        self.ni_output_cb.clear()
+        if self.show_ni_output:
+            self.ni_output_cb.clear()
         
         # Counters
         counters = self.ni_handler.list_counters(module_name)
@@ -145,13 +152,14 @@ class ConnectionDialog(QDialog):
         terminals = self.ni_handler.list_pfi_terminals(module_name)
         for term in terminals:
             self.ni_source_cb.addItem(term)
-            self.ni_output_cb.addItem(term)
+            if self.show_ni_output:
+                self.ni_output_cb.addItem(term)
 
     def get_selection(self):
         ni_device = self.ni_device_cb.currentText() if self.show_ni else None
         ni_counter = self.ni_counter_cb.currentText() if self.show_ni else None
         ni_source = self.ni_source_cb.currentText() if self.show_ni else None
-        ni_output = self.ni_output_cb.currentText() if self.show_ni else None
+        ni_output = self.ni_output_cb.currentText() if (self.show_ni and self.show_ni_output) else None
 
         return {
             "tfp_port": self.tfp_port_cb.currentText(),

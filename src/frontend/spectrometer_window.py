@@ -40,6 +40,12 @@ class SpectrometerWindow(QMainWindow):
         self.btn_resolved.clicked.connect(self.on_resolved_clicked)
         panes_layout.addWidget(self.btn_resolved)
 
+        # Pane 3: TFP and DLS analysis
+        self.btn_dls = self.create_pane("TFP and DLS analysis", 
+                                        "Simultaneous TFP and Dynamic Light Scattering analysis.")
+        self.btn_dls.clicked.connect(self.on_dls_clicked)
+        panes_layout.addWidget(self.btn_dls)
+
         main_layout.addLayout(panes_layout)
         
         # Apply some premium styling
@@ -106,4 +112,10 @@ class SpectrometerWindow(QMainWindow):
         from frontend.tfp_tr_window import TFP_TRWindow
         self.main_viewer = TFP_TRWindow()
         self.main_viewer.show()
+        self.close()
+
+    def on_dls_clicked(self):
+        from frontend.tfp_dls_window import TFP_DLSWindow
+        self.dls_viewer = TFP_DLSWindow()
+        self.dls_viewer.show()
         self.close()
